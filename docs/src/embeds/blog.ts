@@ -36,10 +36,11 @@ const seed = (editor: WorkflowEditor): void => {
       data: {
         model,
         prompt:
-          'Break a blog post about {topic} into 4 sections. Respond with a ' +
-          'JSON object whose "sections" key is an array of 4 short, ' +
-          'descriptive section headings (strings).',
-        outputSchema: [{ name: 'sections', dataType: 'json' }],
+          'Break a blog post about {topic} into 4 short, descriptive ' +
+          'section headings.',
+        outputSchema: [
+          { name: 'sections', dataType: 'string', multiple: true },
+        ],
       },
     })
     editor.setNodeName(outline.id, 'Outline')

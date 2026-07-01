@@ -1,8 +1,14 @@
 import type { Field } from '@wayflow/agent'
 
+interface PropertySchema {
+  type: string
+  // Present when the field is a list; `type` is then 'array'.
+  items?: { type: string }
+}
+
 export interface JsonSchema {
   type: 'object'
-  properties: Record<string, { type: string }>
+  properties: Record<string, PropertySchema>
   required: string[]
   additionalProperties: false
 }
@@ -16,23 +22,26 @@ const DATA_TYPE_TO_JSON_TYPE: Record<string, string> = {
 }
 
 export const fieldsToJsonSchema = (fields: Field[]): JsonSchema => {
-  const properties: Record<string, { type: string }> = {}
+  const properties: Record<string, PropertySchema> = {}
   const required: string[] = []
   for (const f of fields) {
-    properties[f.name] = {
-      type: DATA_TYPE_TO_JSON_TYPE[f.dataType] ?? 'string',
-    }
+    const type = DATA_TYPE_TO_JSON_TYPE[f.dataType] ?? 'string'
+    properties[f.name] = f.multiple
+      ? { type: 'array', items: { type } }
+      : { type }
     required.push(f.name)
   }
   return { type: 'object', properties, required, additionalProperties: false }
 }
 
-// True when the schema represents structured output: many fields, or one
-// non-string field. A single string field is the plain-text default.
+// True when the schema represents structured output: many fields, a list, or a
+// single non-string field. A single scalar string field is the plain-text
+// default.
 export const isStructured = (outputSchema: Field[] | undefined): boolean => {
   if (!outputSchema || outputSchema.length === 0) return false
   if (outputSchema.length > 1) return true
-  return outputSchema[0].dataType !== 'string'
+  const [field] = outputSchema
+  return field.multiple === true || field.dataType !== 'string'
 }
 
 export const jsonSchemaInstructions = (schema: JsonSchema): string =>
