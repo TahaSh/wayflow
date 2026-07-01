@@ -1,6 +1,6 @@
 {
   "name": "wayflow",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "An embeddable visual workflow editor for the web. Powered by AI when you want it, plain logic when you don't.",
   "keywords": [
     "workflow",
@@ -76,6 +76,48 @@
     },
     "./dom/styles.css": "./dist/dom/styles.css",
     "./ui/styles.css": "./dist/ui/styles.css"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./core": {
+        "types": "./dist/core/index.d.ts",
+        "import": "./dist/core/index.js"
+      },
+      "./dom": {
+        "types": "./dist/dom/index.d.ts",
+        "import": "./dist/dom/index.js"
+      },
+      "./agent": {
+        "types": "./dist/agent/index.d.ts",
+        "import": "./dist/agent/index.js"
+      },
+      "./runtime": {
+        "types": "./dist/runtime/index.d.ts",
+        "import": "./dist/runtime/index.js"
+      },
+      "./runtime/sse": {
+        "types": "./dist/runtime/sse.d.ts",
+        "import": "./dist/runtime/sse.js"
+      },
+      "./runtime/client": {
+        "types": "./dist/runtime/client.d.ts",
+        "import": "./dist/runtime/client.js"
+      },
+      "./models": {
+        "types": "./dist/models/index.d.ts",
+        "import": "./dist/models/index.js"
+      },
+      "./models/openai": {
+        "types": "./dist/models/openai.d.ts",
+        "import": "./dist/models/openai.js"
+      },
+      "./dom/styles.css": "./dist/dom/styles.css",
+      "./ui/styles.css": "./dist/ui/styles.css"
+    }
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Package tarballs (pnpm pack / npm pack)
+*.tgz
+
 # TypeScript incremental build cache
 *.tsbuildinfo
 

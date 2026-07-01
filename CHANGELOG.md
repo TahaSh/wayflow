@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.1.2] - 2026-07-02
+
+### Fixed
+
+- **Package resolution under Vite** — the published package no longer exposes a
+  `development` export condition pointing at unbundled source, which broke
+  `import ... from 'wayflow'` in Vite dev servers ("Failed to resolve import").
+  Consumers now resolve to the built `dist` output.
+
 ## [0.1.1] - 2026-07-02
 
 ### Fixed
@@ -46,6 +55,7 @@ First public release — an embeddable visual workflow editor for the web.
 - Full TypeScript types, zero runtime dependencies, and a tree-shakeable
   umbrella package. MIT licensed.
 
-[Unreleased]: https://github.com/TahaSh/wayflow/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/TahaSh/wayflow/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/TahaSh/wayflow/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/TahaSh/wayflow/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/TahaSh/wayflow/releases/tag/v0.1.0
