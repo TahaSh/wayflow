@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.1.1] - 2026-07-02
+
+### Fixed
+
+- **Structured output for list fields** — an LLM node whose output field is a
+  list (`multiple: true`) now emits a valid array JSON schema and is detected as
+  structured output. Previously it produced an invalid schema that strict
+  providers (OpenAI `json_schema`, the Anthropic-compatible endpoint) rejected.
+
 ## [0.1.0] - 2026-07-01
 
 First public release — an embeddable visual workflow editor for the web.
@@ -37,5 +46,6 @@ First public release — an embeddable visual workflow editor for the web.
 - Full TypeScript types, zero runtime dependencies, and a tree-shakeable
   umbrella package. MIT licensed.
 
-[Unreleased]: https://github.com/TahaSh/wayflow/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/TahaSh/wayflow/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/TahaSh/wayflow/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/TahaSh/wayflow/releases/tag/v0.1.0
