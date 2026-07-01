@@ -1,0 +1,75 @@
+---
+title: Node library
+description: A map of the built-in nodes — what each one does, grouped exactly as you'll find them in the palette.
+---
+
+import Callout from "@/components/content/Callout.astro";
+import EditorShot from "@/components/content/EditorShot.astro";
+
+Every workflow is built from nodes. Each node is one step: it takes some input,
+does its job, and passes the result down the wires to the next node. The editor
+ships with a set of built-in nodes for the steps you reach for most — and when
+none of them fit, you add your own.
+
+This page is the map. Skim it to see what's in the box, then follow a link when
+you want the details on a specific node. The two groups below match the
+categories in the palette.
+
+<EditorShot
+  size="narrow"
+  caption="The node palette, grouped into Flow and AI — drag any node onto the canvas."
+  alt="The editor's node palette listing the built-in nodes under Flow and AI categories."
+  src="node-library-palette.png"
+/>
+
+## Flow
+
+The nodes that move data through a workflow and decide where it goes.
+
+- **[Input](/docs/building-workflows/input-output)** — defines what the workflow
+  takes in. Each field becomes an output port the rest of the graph wires to.
+- **[Output](/docs/building-workflows/input-output)** — collects the final
+  result. Whatever you wire into it becomes the workflow's output.
+- **[Conditional](/docs/building-workflows/conditional)** — branches. Compares a
+  value against a target and routes execution down the **True** or **False** path.
+- **[Merge](/docs/building-workflows/merge)** — combines several inputs into one,
+  with modes for how to join them (including zipping lists together).
+- **[Array Operations](/docs/building-workflows/map-and-arrays)** — transforms a
+  list: filter, map, count, sum, and more.
+- **[Human Review](/docs/running-workflows/human-in-the-loop)** — pauses the run
+  for a person to approve or reject, then routes to the **Approved** or
+  **Rejected** path.
+
+## AI
+
+The nodes that call a model. Point them at a provider — see [Providers &
+models](/docs/concepts/providers-and-models) — and they fit alongside the Flow
+nodes like any other step.
+
+- **[LLM](/docs/building-workflows/llm)** — sends a prompt to a language model and
+  returns its response. Give it [tools](/docs/building-workflows/tools) to call,
+  ask for [structured output](/docs/running-workflows/structured-output), or feed
+  it images.
+- **[Image Generation](/docs/building-workflows/image-generation)** — generates an
+  image from a text prompt.
+
+## Running a node over a list
+
+The LLM and Image Generation nodes can run **once per item over a list** instead
+of a single time — how you'd summarize fifty tickets or generate a dozen images
+in one step. See [Map & arrays](/docs/building-workflows/map-and-arrays).
+
+<Callout variant="tip" title="Need a step that isn't here?">
+  Build your own. A custom node gets its own ports, config, and logic — a node
+  that calls your API, queries your database, or sends an email slots in right
+  next to the built-ins. See [Custom node
+  types](/docs/building-workflows/custom-node-types).
+</Callout>
+
+## Where next
+
+- [Input & Output](/docs/building-workflows/input-output) — the entry and exit of
+  every workflow; the place to start
+- [LLM](/docs/building-workflows/llm) — the node you'll reach for most
+- [Custom node types](/docs/building-workflows/custom-node-types) — build a step
+  the built-ins don't cover

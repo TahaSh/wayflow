@@ -1,0 +1,62 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  DocsLayout — top bar + sidebar + content + TOC
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+import type { MarkdownHeading } from 'astro'
+import DocFooter from '@/components/chrome/DocFooter.astro'
+import Header from '@/components/chrome/Header.astro'
+import Pager from '@/components/chrome/Pager.astro'
+import SearchPalette from '@/components/chrome/SearchPalette.astro'
+import Sidebar from '@/components/chrome/Sidebar.astro'
+import TableOfContents from '@/components/chrome/TableOfContents.astro'
+import { getSectionTitle } from '@/lib/navigation'
+import BaseLayout from './BaseLayout.astro'
+
+interface Props {
+  title: string
+  description?: string
+  slug: string
+  headings: MarkdownHeading[]
+  editPath: string
+}
+
+const { title, description, slug, headings, editPath } = Astro.props
+const section = getSectionTitle(slug)
+---
+
+<BaseLayout title={title} description={description} ogType="article">
+  <Header />
+  <div class="drawer-scrim" data-drawer-close></div>
+
+  <div class="layout">
+    <Sidebar />
+
+    <main id="main" class="content" data-pagefind-body>
+      <div class="content-inner">
+        {
+          section && (
+            <div class="breadcrumb" data-pagefind-ignore>
+              <span>{section}</span>
+              <span class="sep">/</span>
+              <span class="cur">{title}</span>
+            </div>
+          )
+        }
+        <h1>{title}</h1>
+        {description && <p class="lead">{description}</p>}
+
+        <div class="prose">
+          <slot />
+        </div>
+
+        <Pager slug={slug} />
+        <DocFooter editPath={editPath} />
+      </div>
+    </main>
+
+    <TableOfContents headings={headings} />
+  </div>
+
+  <SearchPalette />
+</BaseLayout>

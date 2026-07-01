@@ -1,0 +1,17 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  Step — a single numbered step (inside <Steps>)
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+interface Props {
+  title: string
+}
+
+const { title } = Astro.props
+---
+
+<div class="step">
+  <div class="step__num"></div>
+  <div class="step__title" set:html={title}></div>
+  <slot />
+</div>

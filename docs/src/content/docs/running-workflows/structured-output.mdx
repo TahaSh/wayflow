@@ -1,0 +1,54 @@
+---
+title: Structured output
+description: Get typed fields back from an LLM instead of free text — each one its own output port.
+---
+
+import Code from '@/components/content/Code.astro'
+
+By default an LLM node hands back free text. Often you want **structured data**
+instead — a category, a score, a yes/no — so the rest of the workflow can branch
+on it, pass it along, or store it. Structured output turns the model's reply into
+typed fields you can wire like any other value.
+
+## Define the shape
+
+Add fields to the LLM node's **Output Schema** in the config panel — each with a
+name and a data type. The node asks the model to return JSON matching that shape,
+and Wayflow parses and validates the reply before it leaves the node. (The
+[LLM](/docs/building-workflows/llm#structured-output) page shows the Output Schema
+in the editor.)
+
+## Each field becomes a port
+
+A schema with a `category` (text) and an `urgency` (number) turns the model's
+answer into two typed output ports:
+
+<Code lang="json" code={`{ "category": "billing", "urgency": 3 }`} />
+
+Now `category` and `urgency` are separate, typed values — wire `category` into a
+[Conditional](/docs/building-workflows/conditional) to branch the run, pass
+`urgency` to the next step, collect either in an
+[Output](/docs/building-workflows/input-output) field. With a **single** field,
+the port simply carries that value directly — no wrapper object to unpack.
+
+## Works with any provider
+
+Some model backends enforce a JSON schema natively; others can't. Wayflow handles
+both — it describes your schema to the model and validates the result — so
+structured output behaves the same whichever provider you connect. See [Providers
+& models](/docs/concepts/providers-and-models).
+
+## When the model doesn't comply
+
+If the reply isn't valid JSON, is missing a field, or returns the wrong shape, the
+run **fails with a clear error** rather than passing malformed data downstream — so
+you find out immediately instead of debugging a silent bad value three nodes
+later.
+
+## Where next
+
+- [LLM](/docs/building-workflows/llm) — where the Output Schema lives
+- [Conditional](/docs/building-workflows/conditional) — branch on a structured
+  field
+- [On a server](/docs/running-workflows/on-a-server) — read the result from a
+  headless run

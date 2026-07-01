@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format check
+        run: pnpm exec biome format .
+      - name: Lint
+        run: pnpm exec biome lint .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm build
+      - name: Typecheck tests
+        run: pnpm typecheck:tests
+      - name: Test
+        run: pnpm test
+
+  # Examples are a separate workspace, so the jobs above don't cover them.
+  # tsc catches type breakage; vite build catches broken imports.
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build examples
+        run: |
+          pnpm -C examples install --frozen-lockfile
+          for d in quickstart custom-nodes low-level with-backend; do
+            pnpm -C "examples/$d" exec tsc --noEmit
+            pnpm -C "examples/$d" exec vite build
+          done

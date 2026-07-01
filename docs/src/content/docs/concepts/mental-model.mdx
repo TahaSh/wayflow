@@ -1,0 +1,103 @@
+---
+title: Mental model
+description: How the pieces of Wayflow fit together — the editor, the runtime, and the one graph that connects them. Hold this picture and the rest of the docs fall into place.
+---
+
+import Code from "@/components/content/Code.astro";
+import EditorShot from "@/components/content/EditorShot.astro";
+
+Most of these docs zoom in on one node, one option, one task. This page does the
+opposite — it's the shape of the whole thing. There's really one idea to hold:
+**you build a workflow in the editor, a separate runtime executes it, and the only
+thing passing between them is a plain graph.** Once that clicks, headless runs,
+saving to your own database, and running on a server all stop being surprising.
+
+## Design time and run time
+
+Wayflow has two halves, and they're cleanly separated.
+
+- The **editor** is _design time_. It's a UI for shaping a graph — arranging nodes
+  on a canvas, wiring them together, configuring each one. On its own it doesn't
+  call your models or execute anything.
+- The **runtime** is _run time_. It takes a finished graph and runs it: visiting
+  nodes, flowing data along the edges, calling the handlers you registered. It has
+  no UI and doesn't depend on the editor at all.
+
+They meet at the **graph** — the workflow itself, as data. The editor produces it;
+the runtime consumes it. When you press **Run** in the editor, that's just the
+editor handing its graph to a runtime; on a server, a runtime runs the very same
+graph with no editor in sight.
+
+<EditorShot
+  src="editor-graph-runtime.png"
+  kind="screenshot"
+  caption="The editor (design time) produces a graph; the runtime (run time) executes it — in the browser or on a server. The graph is the only thing that passes between them."
+  alt="A left-to-right flow: an editor canvas of connected nodes, an arrow to a single workflow-graph document, and an arrow from there into a runtime engine that runs in the browser or on a server."
+/>
+
+## A workflow is a graph
+
+A graph is just **nodes and edges**. Each node holds its configuration and exposes
+typed **ports** — inputs on one side, outputs on the other. An **edge** joins one
+node's output port to another's input port, and that's how a value produced by one
+node reaches the next. The node pages in [Building
+workflows](/docs/building-workflows/node-library) are each a tour of one node's
+ports and config.
+
+The editor edits this graph. The runtime walks it. Nothing more exotic is going on
+underneath — which is what makes the next part true.
+
+## The graph is just data
+
+Because a workflow is plain data, it's **portable**. `editor.getGraph()` hands you
+the graph; `serialize` turns it into a JSON string and `deserialize` brings it
+back — both from `wayflow/core`:
+
+<Code
+  file="graph.ts"
+  lang="ts"
+  code={`import { serialize, deserialize } from 'wayflow/core'
+
+const json = serialize(editor.getGraph()) // store this string anywhere
+const graph = deserialize(json) // …and read it back into a graph`}
+/>
+
+That JSON is yours to do anything with — save it to a database, write it to a file,
+version it alongside your code, send it between client and server. Load it back
+into an editor to keep editing, or hand it straight to a runtime to run:
+
+<Code
+  file="run.ts"
+  lang="ts"
+  code={`const outcome = await runtime.run(deserialize(json), { inputs })`}
+/>
+
+The same artifact, two consumers — and no hidden state tucked away somewhere else.
+That's why a workflow built in one place runs anywhere: it's just a graph you can
+move around. Wiring up automatic saving and loading is covered in [Persistence &
+autosave](/docs/running-workflows/persistence).
+
+## Built in layers
+
+You can live entirely at the top — one `createWorkflowEditor` call, one
+`createRuntime` — and never think about what's beneath. When you need more, each
+layer below is a real surface you can drop down to:
+
+- **core** — the graph primitives (nodes, edges, viewport, history)
+- **dom** — the canvas and editor surface
+- **agent** — workflow node types and the handler API
+- **runtime** — the execution engine
+- **models** — provider-neutral LLM and image adapters
+- **ui** — the editor and its design-system primitives
+
+Most apps never reach past the top. But [custom node
+types](/docs/building-workflows/custom-node-types) and the runtime API are right
+there the moment you outgrow the defaults — you're never blocked.
+
+## Where next
+
+- [Quickstart](/docs/getting-started/quickstart) — see the whole loop end to end
+- [Where workflows run](/docs/running-workflows/overview) — the runtime, in the
+  browser or on a server
+- [Providers & models](/docs/concepts/providers-and-models) — connect a model so
+  the AI nodes can run

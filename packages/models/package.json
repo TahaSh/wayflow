@@ -1,0 +1,29 @@
+{
+  "name": "@wayflow/models",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/models.js"
+    },
+    "./openai": {
+      "development": "./src/openai.ts",
+      "types": "./dist/openai.d.ts",
+      "import": "./dist/openai.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@wayflow/agent": "workspace:*",
+    "@wayflow/core": "workspace:*",
+    "@wayflow/runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0"
+  }
+}

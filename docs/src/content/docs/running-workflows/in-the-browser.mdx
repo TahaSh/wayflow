@@ -1,0 +1,81 @@
+---
+title: In the browser
+description: Run a workflow entirely client-side — create a runtime, wire it to Run, no backend.
+---
+
+import Callout from '@/components/content/Callout.astro'
+import Code from '@/components/content/Code.astro'
+
+The fastest way to run a workflow is right in the browser — no backend, nothing to
+deploy. You create a runtime, hand it to the editor, and pressing **Run** executes
+the graph in the page, streaming results into the canvas as it goes. It's how the
+[Quickstart](/docs/getting-started/quickstart) runs, and it's ideal for local
+development, prototypes, and demos.
+
+## Create a runtime
+
+The **runtime** is what executes a graph. You give it **handlers** — one per node
+type that does work. Everything structural (input, output, conditional, merge,
+map) is built in; the LLM node just needs a model provider:
+
+<Code
+  file="run.ts"
+  code={`const runtime = createRuntime({
+    handlers: {
+      llm: createLLMHandler(createMockProvider()),
+    },
+  })`}
+/>
+
+The mock provider runs with no API key, so the whole thing works offline. Swap in a
+real provider when you're ready — see [Providers &
+models](/docs/concepts/providers-and-models).
+
+## Wire it to Run
+
+Point the editor's `onRun` at `runInBrowser` (from `wayflow/runtime/client`). It
+runs the current graph and streams every step back into the canvas — nodes light up
+as they execute and results fill in live:
+
+<Code
+  file="run.ts"
+  code={`const editor = createWorkflowEditor(element, {
+    onRun: ({ inputs, signal }) =>
+      runInBrowser({ runtime, editor, inputs, signal }),
+  })`}
+/>
+
+- **`inputs`** — the values for the workflow's Input fields, passed straight
+  through.
+- **`signal`** — the editor's Cancel button; aborting it stops the run.
+
+That's the whole loop. Press **Run** and the workflow executes in the page.
+
+<Callout variant="warn" title="Keys belong on a server">
+The mock keeps everything local and free, but real models need a key — and a key
+in the browser is exposed to anyone who opens the page. So keep the browser for
+local work, prototypes, and demos. For production, move the runtime to your server:
+same workflow, keys stay safe. See [On a
+server](/docs/running-workflows/on-a-server).
+</Callout>
+
+## Run without the editor
+
+You can also run a graph directly, no editor involved — handy for a test or a
+headless trigger. `runtime.run` executes it and resolves with the outcome:
+
+<Code
+  file="run.ts"
+  code={`const outcome = await runtime.run(graph, { inputs: { topic: 'coffee' } })`}
+/>
+
+How `inputs` and the result are shaped is covered in [Input &
+Output](/docs/building-workflows/input-output).
+
+## Where next
+
+- [On a server](/docs/running-workflows/on-a-server) — the production path, with
+  keys kept safe
+- [Structured output](/docs/running-workflows/structured-output) — typed fields
+  back from an LLM
+- [Providers & models](/docs/concepts/providers-and-models) — wire up a real model

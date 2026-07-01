@@ -1,0 +1,193 @@
+---
+title: Providers & models
+description: The AI nodes are provider-neutral — they don't talk to any model until you connect one. Here's how to wire a provider to your runtime so the LLM and Image Generation nodes run.
+---
+
+import Callout from '@/components/content/Callout.astro'
+import Code from '@/components/content/Code.astro'
+
+The [LLM](/docs/building-workflows/llm) and [Image
+Generation](/docs/building-workflows/image-generation) nodes don't ship with a
+model. Wayflow stays provider-neutral on purpose — *you* decide which model
+answers, and the same workflow runs against OpenAI, Claude, a local model, or
+anything else. That choice is made in one place: the **provider** you connect to
+your runtime. Until you do, an AI node has nothing to call.
+
+This page is how you make that connection.
+
+## The shape of it
+
+Three pieces snap together:
+
+- A **client** talks to a model's API. You bring your own — Wayflow never imports
+  a vendor SDK; it duck-types any OpenAI-compatible client.
+- A **provider** wraps that client into something Wayflow understands —
+  `createOpenAIProvider`.
+- A **handler** plugs the provider into a node type and goes on the runtime. The
+  LLM node is served by `createLLMHandler`, Image Generation by
+  `createImageGenerationHandler`.
+
+## Connect a model
+
+Point a client at your model's API, wrap it in a provider, and hand it to the LLM
+handler on your runtime:
+
+<Code
+  file="runtime.ts"
+  lang="ts"
+  code={`import OpenAI from 'openai'
+import { createLLMHandler } from 'wayflow/models'
+import { createOpenAIProvider } from 'wayflow/models/openai'
+import { createRuntime } from 'wayflow/runtime'
+
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+
+export const runtime = createRuntime({
+    handlers: {
+      llm: createLLMHandler(createOpenAIProvider({ client })),
+    },
+  })`}
+/>
+
+The handler's key — `llm` — is the node type it serves. That's the whole
+connection: every LLM node in the workflow now runs against this client.
+
+<Callout variant="note" title="Any OpenAI-compatible endpoint">
+The client is just the official `openai` package pointed wherever you like — a
+hosted provider, a local server like Ollama, or Claude through its
+OpenAI-compatible endpoint. Set its `baseURL` and `apiKey` and Wayflow uses it
+as-is; it never assumes a specific vendor.
+</Callout>
+
+## Tune the provider
+
+`createOpenAIProvider` is set up for a hosted, OpenAI-style API. Local and
+non-OpenAI backends often need a nudge — the kind that makes a model *run* but
+return nothing useful until it's set. Three options cover the common cases, shown
+here against a local Ollama server:
+
+<Code
+  file="runtime.ts"
+  lang="ts"
+  code={`const ollama = new OpenAI({
+    baseURL: 'http://localhost:11434/v1',
+    apiKey: 'ollama',
+  })
+
+createOpenAIProvider({
+    client: ollama,
+    extraBody: { reasoning_effort: 'none' },
+    structuredOutput: 'jsonObject',
+    acceptsImageUrls: false,
+  })`}
+/>
+
+- **`extraBody`** is merged into every request, for provider-specific fields the
+  OpenAI shape doesn't cover — like switching off a local model's step-by-step
+  reasoning.
+- **`structuredOutput`** defaults to `'jsonSchema'`, which enforces a node's
+  [output schema](/docs/running-workflows/structured-output) natively. Backends
+  that can't do that take `'jsonObject'` instead — Wayflow forces valid JSON and
+  describes the shape to the model in the prompt.
+- **`acceptsImageUrls`** defaults to `true`; set it `false` for backends that only
+  accept base64 images, and Wayflow inlines any remote image before sending.
+
+## Route models to different providers
+
+Passing a single provider serves every model with it. To send different model IDs
+to different providers, give the handler a `models` map — keys are model IDs (with
+a trailing `*` to match a family), and the node's selected model picks the match:
+
+<Code
+  file="runtime.ts"
+  lang="ts"
+  code={`createLLMHandler({
+    models: {
+      'gpt-4*': createOpenAIProvider({ client: openai }),
+      'claude*': createOpenAIProvider({ client: claude }),
+    },
+  })`}
+/>
+
+A node set to `gpt-4o` resolves to the first, `claude-sonnet-4-6` to the second.
+An exact ID wins over a prefix, and a `'*'` key catches everything else.
+
+## Tune the tool loop
+
+When an LLM node uses [tools](/docs/building-workflows/tools), the model can call
+them across several round-trips before settling on an answer. The defaults are
+sensible, but you can wrap the provider in `createChatHandler` to cap that loop or
+change how transient failures retry:
+
+<Code
+  file="runtime.ts"
+  lang="ts"
+  code={`createLLMHandler({
+    models: {
+      '*': createChatHandler(createOpenAIProvider({ client }), {
+        maxSteps: 10,
+        retries: 3,
+      }),
+    },
+  })`}
+/>
+
+- **`maxSteps`** (default 20) — the most tool-calling round-trips before the
+  handler forces a final, tool-free answer. A backstop against a model that keeps
+  reaching for tools.
+- **`retries`** (default 2) — retries on a transient failure (a rate limit or
+  dropped connection) before any output has streamed; once it has, errors
+  propagate.
+
+## Image generation
+
+Image models work the same way, with their own handler and provider:
+
+<Code
+  file="runtime.ts"
+  lang="ts"
+  code={`import { createImageGenerationHandler } from 'wayflow/models'
+import { createOpenAIImageProvider } from 'wayflow/models/openai'
+
+createRuntime({
+    handlers: {
+      imageGeneration: createImageGenerationHandler(
+        createOpenAIImageProvider({ client }),
+      ),
+    },
+  })`}
+/>
+
+## Offer the models in the editor
+
+The runtime decides what *runs*; the editor decides what a builder can *pick*. The
+Model dropdown lists exactly what you give it — so it reflects your backend
+instead of a hardcoded menu:
+
+<Code
+  file="editor.ts"
+  lang="ts"
+  code={`createWorkflowEditor(element, {
+    llm: { models: ['gpt-5.4-mini', 'gpt-5.4'] },
+    imageGeneration: { models: ['gpt-image-1'] },
+  })`}
+/>
+
+Keep this list in sync with the providers your runtime actually serves, and the
+two halves line up: a builder can only choose a model you can run.
+
+<Callout variant="tip" title="Keys belong on the server">
+A provider holds your API key, so in production the runtime with these handlers
+lives on your server — never in the browser bundle. See [Running on a
+server](/docs/running-workflows/on-a-server).
+</Callout>
+
+## Where next
+
+- [LLM](/docs/building-workflows/llm) — the node this powers
+- [Image generation](/docs/building-workflows/image-generation) — its visual
+  counterpart
+- [Running on a server](/docs/running-workflows/on-a-server) — where providers and
+  their keys belong
+- [Running in the browser](/docs/running-workflows/in-the-browser) — wiring the
+  same runtime client-side for local or bring-your-own-key runs

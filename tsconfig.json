@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "customConditions": ["development"],
+    "paths": {
+      "wayflow": ["./src"],
+      "@wayflow/core": ["./packages/core/src"],
+      "@wayflow/dom": ["./packages/dom/src"],
+      "@wayflow/agent": ["./packages/agent/src"],
+      "@wayflow/ui": ["./packages/ui/src"],
+      "@wayflow/runtime": ["./packages/runtime/src"],
+      "@wayflow/runtime/sse": ["./packages/runtime/src/sse"],
+      "@wayflow/runtime/client": ["./packages/runtime/src/client"],
+      "@wayflow/models": ["./packages/models/src"],
+      "@wayflow/models/openai": ["./packages/models/src/openai"]
+    }
+  },
+  "references": [
+    { "path": "packages/core" },
+    { "path": "packages/dom" },
+    { "path": "packages/runtime" },
+    { "path": "packages/models" }
+  ]
+}

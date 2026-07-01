@@ -1,0 +1,89 @@
+---
+title: wayflow/core
+description: The plain-data graph model, serialization, and the primitives to build a graph without the editor.
+---
+
+The lowest layer — generic graph primitives with no workflow vocabulary. Most apps
+touch it only for `serialize`/`deserialize` and the model types.
+
+## The graph model
+
+A workflow is plain data: the shapes the editor produces and the runtime consumes.
+
+### `Graph`
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `nodes` | `Record<string, Node>` | The nodes, keyed by id. |
+| `edges` | `Record<string, Edge>` | The edges, keyed by id. |
+| `metadata` | `GraphMetadata` | The workflow's name and description (optional). |
+
+### `Node`
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id` | `string` | Unique within the graph. |
+| `type` | `string` | The node type — `llm`, `imageGeneration`, a custom type, … |
+| `name` | `string` | A user-given display name (optional). |
+| `data` | `NodeData` | The node's config — `Record<string, unknown>`. |
+| `ports` | `Port[]` | Its input and output ports. |
+| `position` | `Position` | Where it sits on the canvas. |
+| `label` / `icon` | `string` | Display label and icon (from the node type). |
+| `size` / `zIndex` / `dataPreview` | — | Editor layout and the inline preview. |
+
+### `Edge`
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id` | `string` | Unique within the graph. |
+| `sourceNodeId` / `sourcePortId` | `string` | The output port it leaves from. |
+| `targetNodeId` / `targetPortId` | `string` | The input port it arrives at. |
+
+### `Port`
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id` | `string` | Unique within the node. |
+| `side` | `'input'` / `'output'` | Which side of the node it's on. |
+| `dataType` | `string` | The data type it carries — drives its color and what it can connect to. |
+| `label` / `color` | `string` | Optional overrides. |
+
+### `GraphMetadata`
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `name` | `string` | The workflow's name. |
+| `description` | `string` | A longer description. |
+
+`Position` is `{ x, y }`; `Viewport` is `{ x, y, zoom }`.
+
+## Serialization
+
+| Function | Notes |
+| --- | --- |
+| `serialize(graph): string` | Turn a `Graph` into a versioned JSON string (`{ version, graph }`) you can store anywhere. |
+| `deserialize(json): Graph` | Parse a serialized string back into a `Graph`; throws if it can't be parsed or is missing its `nodes`/`edges`. |
+
+## Construction
+
+Build a graph without the editor — handy for generating workflows programmatically,
+then running them with the runtime.
+
+### `createNode(params): Node`
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `position` | `{ x, y }` | Where it sits on the canvas. **Required.** |
+| `ports` | `Port[]` | Its input and output ports. **Required.** |
+| `type` | `string` | The node type. |
+| `data` | `NodeData` | Initial config. |
+| `id` | `string` | Auto-generated when omitted. |
+| `label` / `icon` / `size` / `dataPreview` | — | Optional display and layout. |
+
+### `createEdge(params): Edge`
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `sourceNodeId` / `sourcePortId` | `string` | The output port to connect from. **Required.** |
+| `targetNodeId` / `targetPortId` | `string` | The input port to connect to. **Required.** |
+| `id` | `string` | Auto-generated when omitted. |

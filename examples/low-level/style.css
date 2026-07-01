@@ -1,0 +1,31 @@
+:root {
+  color-scheme: light dark;
+  --bg: #0a0b10;
+  --border: hsl(240, 8%, 16%);
+  --text: hsl(240, 8%, 92%);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #fbfcfd;
+    --border: hsl(240, 8%, 84%);
+    --text: hsl(240, 8%, 14%);
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* The editor fills the viewport. */
+#editor {
+  height: 100vh;
+}

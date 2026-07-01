@@ -1,0 +1,732 @@
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Editor
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.wf-editor,
+.wf-editor *,
+.wf-editor *::before,
+.wf-editor *::after {
+  box-sizing: border-box;
+}
+
+.wf-editor {
+  position: relative;
+  overflow: hidden;
+  outline: none;
+  /* Claim touch gestures (pan/drag/pinch) instead of letting the browser
+     scroll or zoom the page. */
+  touch-action: none;
+  font-family: var(--wf-font, inherit);
+  background: var(--wf-bg-canvas, #0a0b10);
+  background-image: radial-gradient(
+    circle,
+    var(--wf-grid, rgba(255, 255, 255, 0.05)) 1px,
+    transparent 1.5px
+  );
+  background-size: 22px 22px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.wf-editor input,
+.wf-editor textarea,
+.wf-editor [contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.wf-canvas-root {
+  transform-origin: 0 0;
+}
+
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Node
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.wf-node {
+  position: absolute;
+  background: linear-gradient(
+    180deg,
+    var(--wf-bg-surface-3, #1a1d24) 0%,
+    var(--wf-bg-surface-2, #14171c) 100%
+  );
+  border: var(--wf-node-border, 1px) solid
+    var(--wf-border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: var(--wf-node-radius, 10px);
+  color: var(--wf-text, rgba(245, 246, 248, 0.96));
+  box-shadow: var(
+    --wf-shadow-2,
+    0 4px 12px rgba(0, 0, 0, 0.45),
+    0 1px 2px rgba(0, 0, 0, 0.3)
+  );
+  transition:
+    border-color var(--wf-dur-fast, 120ms) ease,
+    box-shadow var(--wf-dur-fast, 120ms) ease;
+}
+
+.wf-node:hover:not(.selected) {
+  border-color: var(--wf-border-strong, rgba(255, 255, 255, 0.16));
+}
+
+.wf-node.selected {
+  border-color: var(--wf-accent, #38bdf8);
+  box-shadow:
+    var(
+      --wf-shadow-2,
+      0 4px 12px rgba(0, 0, 0, 0.45),
+      0 1px 2px rgba(0, 0, 0, 0.3)
+    ),
+    0 0 0 1px var(--wf-accent, #38bdf8);
+}
+
+.wf-node-skipped {
+  opacity: 0.6;
+}
+
+.wf-node-cancelled {
+  opacity: 0.7;
+}
+
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Status strip
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+/* Clip wraps the strip so its top corners follow the card's rounding.
+   `inset` insets by the border so the strip terminates flush at the
+   border edge instead of overlapping it. */
+.wf-node-strip-clip {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: var(--wf-node-radius, 10px);
+  overflow: hidden;
+  border-top-left-radius: calc(
+    var(--wf-node-radius, 10px) -
+    var(--wf-node-border, 1px)
+  );
+  border-top-right-radius: calc(
+    var(--wf-node-radius, 10px) -
+    var(--wf-node-border, 1px)
+  );
+  pointer-events: none;
+}
+
+.wf-node-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--wf-node-status-h, 3px);
+  background: transparent;
+  transition: background var(--wf-dur-base, 180ms) ease;
+}
+
+.wf-node-running .wf-node-strip {
+  background: var(--wf-c-running, #4aa3ff);
+  animation: wf-strip-pulse 1.6s ease-in-out infinite;
+}
+
+.wf-node-waiting .wf-node-strip {
+  background: var(--wf-c-warning, #fbbf24);
+  animation: wf-strip-pulse 1.6s ease-in-out infinite;
+}
+
+.wf-node-complete .wf-node-strip {
+  background: var(--wf-c-success, #34d399);
+}
+
+.wf-node-error .wf-node-strip {
+  background: var(--wf-c-error, #f87171);
+}
+
+.wf-node-cancelled .wf-node-strip {
+  background: var(--wf-c-cancelled, rgba(245, 246, 248, 0.2));
+}
+
+.wf-node-skipped .wf-node-strip {
+  background: var(--wf-c-skipped, rgba(245, 246, 248, 0.28));
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 4px,
+    rgba(0, 0, 0, 0.3) 4px 8px
+  );
+}
+
+/* Warning chip — full circle floating over the top-right corner. The ring of
+   canvas-bg punches through both the strip and the border, so the chip reads
+   as a complete badge instead of being clipped by the card edge. */
+.wf-node-warned::after {
+  content: "!";
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--wf-c-warning, #fbbf24);
+  color: var(--wf-bg-canvas, #0a0b10);
+  font-family: var(--wf-font, inherit);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 3px var(--wf-bg-canvas, #0a0b10);
+  z-index: 3;
+}
+
+.wf-node-locating {
+  border-color: var(--wf-c-warning, #fbbf24);
+  box-shadow:
+    var(
+      --wf-shadow-2,
+      0 4px 12px rgba(0, 0, 0, 0.45),
+      0 1px 2px rgba(0, 0, 0, 0.3)
+    ),
+    0 0 0 1px var(--wf-c-warning, #fbbf24),
+    0 0 28px var(--wf-c-warning-soft, rgba(251, 191, 36, 0.18));
+}
+
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Node Content
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.wf-node-content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: calc(var(--wf-node-radius, 10px) - var(--wf-node-border, 1px))
+    calc(var(--wf-node-radius, 10px) - var(--wf-node-border, 1px)) 0 0;
+}
+
+.wf-node-header {
+  height: var(--wf-header-height);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 0 14px;
+  /* Strip sits above the header at the very top of the card; the header
+     itself stays neutral and is no longer the carrier of status color. */
+  padding-top: var(--wf-node-status-h, 3px);
+  border-bottom: 1px solid var(--wf-border-hair, rgba(255, 255, 255, 0.06));
+}
+
+.wf-node-header-text {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.wf-node-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: var(--wf-fs-lg, 14px);
+  font-weight: var(--wf-fw-sem, 600);
+  letter-spacing: var(--wf-tracking-tight, -0.005em);
+  color: var(--wf-text, #f1f5f9);
+}
+
+.wf-node-title-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wf-node-title-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--wf-icon-default);
+}
+
+.wf-node-title-muted {
+  font-style: italic;
+  font-weight: var(--wf-fw-reg, 450);
+  color: var(--wf-text-tertiary, rgba(245, 246, 248, 0.46));
+  text-transform: capitalize;
+}
+
+.wf-node-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--wf-fs-xs, 11px);
+  font-weight: var(--wf-fw-med, 500);
+  color: var(--wf-text-quaternary, rgba(245, 246, 248, 0.3));
+  text-transform: uppercase;
+  letter-spacing: var(--wf-tracking-wide, 0.04em);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 4px;
+}
+
+.wf-node-subtitle-icon {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  color: var(--wf-icon-default);
+}
+
+.wf-node-edit-btn {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--wf-radius-sm, 6px);
+  color: var(--wf-text-secondary, rgba(245, 246, 248, 0.66));
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+  opacity: 0;
+  transition:
+    opacity var(--wf-dur-fast, 120ms) ease,
+    background var(--wf-dur-fast, 120ms) ease,
+    color var(--wf-dur-fast, 120ms) ease;
+}
+
+.wf-node-header:hover .wf-node-edit-btn {
+  opacity: 1;
+}
+
+.wf-editor-readonly .wf-node-edit-btn {
+  display: none;
+}
+
+.wf-node-edit-btn:hover {
+  background: var(--wf-bg-hover, rgba(255, 255, 255, 0.06));
+  color: var(--wf-text, #f1f5f9);
+}
+
+.wf-node-title-input {
+  width: 100%;
+  font: inherit;
+  font-size: var(--wf-fs-md, 13px);
+  font-weight: var(--wf-fw-sem, 600);
+  letter-spacing: var(--wf-tracking-tight, -0.005em);
+  color: var(--wf-text, #f1f5f9);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  outline: none;
+}
+
+.wf-node-title-input::placeholder {
+  color: var(--wf-text-tertiary, rgba(245, 246, 248, 0.5));
+  font-style: italic;
+}
+
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Port Rows (labels inside content flow)
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.wf-port-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.wf-port-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  height: 28px;
+  padding: 0 12px;
+}
+
+.wf-port-row-label {
+  font-family: var(--wf-mono, ui-monospace, monospace);
+  font-size: var(--wf-fs-xs, 11px);
+  font-weight: var(--wf-fw-reg, 450);
+  color: var(--wf-text-tertiary, rgba(245, 246, 248, 0.46));
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.wf-port-row-left {
+  text-align: left;
+}
+
+.wf-port-row-right {
+  text-align: right;
+  margin-left: auto;
+}
+
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Custom Node Content
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.wf-node-custom-content {
+  padding: 8px 12px;
+  border-top: 1px solid var(--wf-border-hair, rgba(255, 255, 255, 0.06));
+}
+
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Data Preview
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.wf-node-data-preview {
+  padding: 8px 12px;
+  border-top: 1px solid var(--wf-border-hair, rgba(255, 255, 255, 0.06));
+}
+
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Run Preview                                       */
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.wf-node-run-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--wf-border-hair, rgba(255, 255, 255, 0.06));
+  font-size: var(--wf-fs-xs, 11px);
+  line-height: 1.4;
+}
+
+.wf-node-run-preview-label {
+  flex-shrink: 0;
+  font-family: var(--wf-mono, ui-monospace, monospace);
+  font-size: 10px;
+  font-weight: var(--wf-fw-sem, 600);
+  letter-spacing: var(--wf-tracking-wide, 0.04em);
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--wf-bg-active, rgba(255, 255, 255, 0.07));
+  color: var(--wf-text-quaternary, rgba(245, 246, 248, 0.3));
+}
+
+.wf-node-run-preview-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--wf-text-secondary, rgba(245, 246, 248, 0.66));
+}
+
+.wf-node-run-preview-error .wf-node-run-preview-label {
+  background: var(--wf-c-error-soft, rgba(248, 113, 113, 0.12));
+  color: var(--wf-c-error, #f87171);
+}
+
+.wf-node-run-preview-error .wf-node-run-preview-text {
+  color: var(--wf-c-error, #f87171);
+}
+
+.wf-node-run-preview-skipped .wf-node-run-preview-label {
+  background: var(--wf-bg-hover, rgba(255, 255, 255, 0.04));
+  color: var(--wf-text-quaternary, rgba(245, 246, 248, 0.3));
+}
+
+.wf-node-run-preview-cancelled .wf-node-run-preview-label {
+  background: var(--wf-bg-active, rgba(255, 255, 255, 0.07));
+  color: var(--wf-text-tertiary, rgba(245, 246, 248, 0.46));
+}
+
+.wf-node-run-preview-cancelled .wf-node-run-preview-text {
+  color: var(--wf-text-tertiary, rgba(245, 246, 248, 0.46));
+  font-style: italic;
+}
+
+.wf-node-data-row {
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--wf-fs-xs, 11px);
+  line-height: 1.4;
+  padding: 1px 0;
+}
+
+.wf-node-data-key {
+  font-family: var(--wf-mono, ui-monospace, monospace);
+  font-size: 10.5px;
+  color: var(--wf-text-tertiary, rgba(245, 246, 248, 0.46));
+  letter-spacing: 0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wf-node-data-value {
+  font-size: var(--wf-fs-xs, 11px);
+  color: var(--wf-text-secondary, rgba(245, 246, 248, 0.66));
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.wf-node-data-text {
+  font-size: var(--wf-fs-xs, 11px);
+  color: var(--wf-text-secondary, rgba(245, 246, 248, 0.66));
+  padding: 2px 0;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+.wf-node-data-more {
+  font-family: var(--wf-mono, ui-monospace, monospace);
+  font-size: 10.5px;
+  color: var(--wf-text-quaternary, rgba(245, 246, 248, 0.3));
+  text-align: center;
+  padding-top: 5px;
+  margin-top: 3px;
+  border-top: 1px dashed var(--wf-border-hair, rgba(255, 255, 255, 0.06));
+}
+
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Chip — pill primitive used by nodes and config panel
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.wf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px 0 6px;
+  background: var(--wf-bg-surface-3);
+  border: 1px solid var(--wf-border-subtle);
+  border-radius: var(--wf-radius-sm, 6px);
+  font-family: var(--wf-mono);
+  font-size: 11px;
+  color: var(--wf-text);
+  white-space: nowrap;
+  vertical-align: middle;
+  transition:
+    background var(--wf-dur-fast) var(--wf-easing),
+    border-color var(--wf-dur-fast) var(--wf-easing);
+}
+
+.wf-chip:hover {
+  background: var(--wf-bg-active);
+}
+
+.wf-chip[data-missing="true"] {
+  background: var(--wf-c-warning-soft);
+  border-color: transparent;
+  color: var(--wf-c-warning);
+}
+
+.wf-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--wf-text-tertiary);
+  flex-shrink: 0;
+}
+
+.wf-chip-name {
+  color: var(--wf-text);
+}
+
+.wf-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  margin-left: 2px;
+  margin-right: -3px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--wf-text-quaternary);
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--wf-dur-fast) var(--wf-easing),
+    background var(--wf-dur-fast) var(--wf-easing),
+    color var(--wf-dur-fast) var(--wf-easing);
+}
+
+.wf-chip:hover .wf-chip-remove {
+  opacity: 1;
+}
+
+.wf-chip-remove:hover {
+  background: var(--wf-bg-active);
+  color: var(--wf-text);
+}
+
+/* Node-body chips: smaller, borderless variant */
+.wf-node-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.wf-node-chips .wf-chip {
+  height: 20px;
+  padding: 0 7px 0 5px;
+  background: var(--wf-bg-active);
+  border-color: transparent;
+}
+
+.wf-node-chips .wf-chip-remove {
+  display: none;
+}
+
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Port (dots on edges — for connections only)
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.wf-port {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 11px;
+  height: 11px;
+  margin-left: -5.5px;
+  margin-top: -5.5px;
+  border-radius: 50%;
+  cursor: crosshair;
+  background-color: var(--wf-port-color, #94a3b8);
+  border: none;
+  box-shadow:
+    0 0 0 2px var(--wf-bg-surface-2, #14171c),
+    0 0 0 3px var(--wf-border-hair, rgba(255, 255, 255, 0.08));
+  transition:
+    opacity var(--wf-dur-fast, 120ms) ease,
+    transform var(--wf-dur-fast, 120ms) ease,
+    box-shadow var(--wf-dur-fast, 120ms) ease;
+  z-index: 2;
+}
+
+/* A transparent hit area larger than the 11px dot, so a connection can be
+   started by touch without zooming in. */
+.wf-port::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.wf-port:hover {
+  transform: scale(1.25);
+  box-shadow:
+    0 0 0 2px var(--wf-bg-surface-2, #14171c),
+    0 0 0 3px var(--wf-border-default, rgba(255, 255, 255, 0.12)),
+    0 0 8px var(--wf-port-color, #94a3b8);
+}
+
+.wf-port.wf-port-incompatible {
+  opacity: 0.2;
+}
+
+.wf-port.wf-port-compatible {
+  opacity: 1;
+  box-shadow:
+    0 0 0 2px var(--wf-bg-surface-2, #14171c),
+    0 0 0 3px var(--wf-border-default, rgba(255, 255, 255, 0.12)),
+    0 0 10px var(--wf-port-color, #94a3b8);
+}
+
+.wf-port-drop-target {
+  background: var(--wf-port-color, #7cb8ff);
+  box-shadow:
+    0 0 0 2px var(--wf-bg-surface-2, #14171c),
+    0 0 0 5px color-mix(in srgb, var(--wf-port-color, #5b9cf6) 40%, transparent),
+    0 0 14px color-mix(in srgb, var(--wf-port-color, #5b9cf6) 60%, transparent);
+}
+
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Edge
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.wf-edge-layer {
+  pointer-events: none;
+  transform-origin: 0 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.wf-edge {
+  stroke: var(--wf-edge, rgba(140, 160, 200, 0.45));
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.wf-edge.selected {
+  stroke: var(--wf-accent, #38bdf8);
+  stroke-width: 2;
+}
+
+.wf-edge-pending {
+  stroke: var(--wf-accent, #38bdf8);
+  stroke-dasharray: 6;
+  opacity: 0.7;
+}
+
+.wf-edge-active {
+  stroke-dasharray: 8 4;
+  animation: wf-flow 0.6s linear infinite;
+}
+
+.wf-edge-skipped {
+  opacity: 0.4;
+}
+
+.wf-edge-hit {
+  opacity: 0;
+  stroke-width: 16;
+  pointer-events: stroke;
+}
+
+.wf-selection-rect {
+  position: absolute;
+  border: 1px solid var(--wf-accent, #38bdf8);
+  background: var(--wf-accent-soft, rgba(56, 189, 248, 0.12));
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+/*  Animations
+/* –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+@keyframes wf-strip-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes wf-flow {
+  to {
+    stroke-dashoffset: -12;
+  }
+}

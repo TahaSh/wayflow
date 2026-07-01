@@ -1,0 +1,33 @@
+{
+  "name": "@wayflow/runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
+      "import": "./dist/runtime.js"
+    },
+    "./sse": {
+      "types": "./dist/sse.d.ts",
+      "development": "./src/sse.ts",
+      "import": "./dist/sse.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "development": "./src/client.ts",
+      "import": "./dist/client.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@wayflow/agent": "workspace:*",
+    "@wayflow/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0"
+  }
+}

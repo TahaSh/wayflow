@@ -1,0 +1,38 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  TableOfContents — "On this page" rail
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+import type { MarkdownHeading } from 'astro'
+
+interface Props {
+  headings: MarkdownHeading[]
+}
+
+const MIN_DEPTH = 2
+const MAX_DEPTH = 3
+
+const { headings } = Astro.props
+const visible = headings.filter(
+  (h) => h.depth >= MIN_DEPTH && h.depth <= MAX_DEPTH,
+)
+---
+
+{
+  visible.length > 0 && (
+    <nav class="toc scroll" aria-label="On this page">
+      <div class="toc__label">On this page</div>
+      {visible.map((heading) => (
+        <a
+          class:list={[
+            'toc__link',
+            heading.depth === MAX_DEPTH && 'toc__link--sub',
+          ]}
+          href={`#${heading.slug}`}
+        >
+          {heading.text}
+        </a>
+      ))}
+    </nav>
+  )
+}

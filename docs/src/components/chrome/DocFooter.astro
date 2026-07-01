@@ -1,0 +1,27 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  DocFooter — edit link + attribution, under the pager
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+const REPO_URL = 'https://github.com/TahaSh/wayflow'
+const AUTHOR_URL = 'https://tahazsh.com/'
+
+interface Props {
+  editPath: string
+}
+
+const { editPath } = Astro.props
+const editHref = `${REPO_URL}/edit/main/docs/${editPath}`
+const year = new Date().getFullYear()
+---
+
+<footer class="doc-foot" data-pagefind-ignore>
+  <a class="doc-foot__edit" href={editHref} target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4v16h16v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"></path></svg>
+    Edit this page on GitHub
+  </a>
+  <p class="doc-foot__legal">
+    © {year} Wayflow · MIT · Built by
+    <a href={AUTHOR_URL}>Taha Shashtari</a>
+  </p>
+</footer>

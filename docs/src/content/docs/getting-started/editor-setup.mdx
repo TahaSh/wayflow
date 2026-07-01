@@ -1,0 +1,101 @@
+---
+title: Editor setup
+description: Give the editor a size, theme it to match your app, and mount it in any framework — it's a single DOM call.
+---
+
+import Callout from '@/components/content/Callout.astro'
+import Code from '@/components/content/Code.astro'
+
+The [Quickstart](/docs/getting-started/quickstart) got the editor on screen. This
+page covers the few setup choices you'll actually reach for — giving it a size,
+theming it, and dropping it into your framework. None of it is much code: the
+editor is built to fit into your app without ceremony.
+
+## Give it a size
+
+The editor fills whatever element you mount it into, so the one thing it needs
+from you is a **height** — an empty `<div>` has none of its own. Width comes from
+the page automatically.
+
+A fixed height is the simplest:
+
+<Code
+  file="index.html"
+  lang="html"
+  code={`<div id="editor" style="height: 600px"></div>`}
+/>
+
+Any other way of giving the container a height works just as well. For a
+full-screen editor, reach for the viewport:
+
+<Code
+  file="styles.css"
+  lang="css"
+  code={`#editor {
+    height: 100vh;
+  }`}
+/>
+
+Inside a flex or grid layout, let the container stretch (`flex: 1`, a grid track,
+or `height: 100%` of a sized parent) — the editor follows along and re-fits as
+the element resizes.
+
+## Theme it
+
+The editor ships with **dark and light themes** and follows the operating system
+by default. To pin one, pass `theme`:
+
+<Code
+  file="editor.ts"
+  code={`createWorkflowEditor(element, { theme: 'light' })`}
+/>
+
+The values are `'auto'` (the default — follows the OS and tracks changes live),
+`'dark'`, and `'light'`.
+
+To switch at runtime — say, to mirror your own app's light/dark toggle — call
+`setTheme`:
+
+<Code file="editor.ts" code={`editor.setTheme('dark')`} />
+
+The editor only themes itself. Its colors are scoped to its own element, so it
+never bleeds into the rest of your page, and both themes are driven by CSS
+variables.
+
+<Callout variant="tip" title="Want your own colors?">
+The dark and light palettes are CSS variables you can override to match your
+brand. See [Theming](/docs/customizing-the-editor/theming).
+</Callout>
+
+## Mount it in any framework
+
+`createWorkflowEditor` is a plain DOM call: you hand it an element and it returns
+a handle. That's the whole integration story, which is why it drops into every
+framework the same way — create the editor once the element exists, and call
+`destroy()` when it goes away.
+
+<Code
+  file="editor.ts"
+  code={`const editor = createWorkflowEditor(element, {
+    // your options
+  })
+
+  // when the element is removed from the page:
+  editor.destroy()
+`}
+/>
+
+In React that's a `useEffect` cleanup; in Vue, `onMounted` paired with
+`onBeforeUnmount`; in Svelte, a cleanup function returned from `onMount`. Same
+two calls every time. There's no framework adapter to learn, because there's
+nothing framework-specific to adapt — it's the same vanilla call whether you use
+React, Vue, Svelte, or no framework at all.
+
+## Where next
+
+- [Building workflows](/docs/building-workflows/node-library) — the built-in
+  nodes and how to add your own
+- [Running workflows](/docs/running-workflows/overview) — execute in the
+  browser or on your server, with real models
+- [Customizing the editor](/docs/customizing-the-editor/theming) — theming,
+  layout, and editor modes

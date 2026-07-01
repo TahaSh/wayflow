@@ -1,0 +1,143 @@
+---
+title: wayflow/models
+description: Provider-neutral model adapters — the LLM and image handlers, mock providers, the provider contracts, and the OpenAI adapter.
+---
+
+import Code from '@/components/content/Code.astro'
+
+The model layer: the handlers that power the AI nodes, mock providers for offline
+runs, and the contracts for bringing your own provider. See [Providers &
+models](/docs/concepts/providers-and-models) for the guide.
+
+## Handlers
+
+### `createLLMHandler(config)`
+
+Powers the LLM node. Returns a `Handler` for the runtime.
+
+| Parameter | Type | Notes |
+| --- | --- | --- |
+| `config` | `LLMProvider`, or `{ models }` | A single provider used for every model, or a map routing model-ID globs to providers. |
+
+When `config` is a map, its keys are model-ID globs and its values are providers —
+an exact ID wins over a prefix, and `'*'` catches the rest:
+
+<Code
+  file="config.ts"
+  lang="ts"
+  code={`{ models: { 'gpt-4*': openai, 'claude*': claude, '*': fallback } }`}
+/>
+
+### `createImageGenerationHandler(config)`
+
+Powers the Image Generation node — the same shape, with image providers. Returns a
+`Handler`.
+
+| Parameter | Type | Notes |
+| --- | --- | --- |
+| `config` | `ImageProvider`, or `{ models }` | A single image provider, or a model-ID-glob map (as above). |
+
+### `createChatHandler(provider, options?)`
+
+The per-model chat handler that `createLLMHandler` wraps a bare provider in — pass
+it explicitly only to tune the tool loop. Returns a `ModelHandler`.
+
+| Parameter | Type | Notes |
+| --- | --- | --- |
+| `provider` | `LLMProvider` | The model to call. |
+| `options` | `ChatHandlerOptions` | Tool-loop tuning (below). |
+
+**`ChatHandlerOptions`**
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `maxSteps` | `number` | `20` | Most tool-calling round-trips before the handler forces a final, tool-free answer. |
+| `retries` | `number` | `2` | Retries on a transient failure before any output has streamed. |
+
+## Mock providers
+
+Fake providers for docs, tests, and offline runs — no network, no API key.
+
+### `createMockProvider(options?)`
+
+A fake `LLMProvider` that streams canned text.
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `respond` | `(prompt: string) => string` | echoes the prompt | Override the generated text; receives the last user message. |
+| `chunkDelayMs` | `number` | `18` | Milliseconds between streamed word chunks; `0` emits in one shot. |
+
+### `createMockImageProvider(options?)`
+
+A fake `ImageProvider`.
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `delayMs` | `number` | `700` | Milliseconds to wait before resolving, simulating generation. |
+
+## Provider contracts
+
+Implement one of these to connect a model Wayflow doesn't already adapt — the
+lowest escape hatch. `LLMProvider` streams chat events and declares its
+capabilities:
+
+<Code
+  file="provider.ts"
+  lang="ts"
+  code={`interface LLMProvider {
+    invoke(opts: {
+      model: string
+      messages: ChatMessage[]
+      tools: ChatTool[]
+      signal: AbortSignal
+      // …temperature, maxTokens, outputSchema
+    }): AsyncIterable<ChatEvent>
+    structuredOutputWithTools?: boolean
+    acceptsImageUrls?: boolean
+  }`}
+/>
+
+| Member | Notes |
+| --- | --- |
+| `invoke(opts)` | Stream the model's reply as `ChatEvent`s for the request (model, messages, tools, …). |
+| `structuredOutputWithTools` | Whether the backend can enforce an output schema while tools are active. |
+| `acceptsImageUrls` | Whether it accepts remote image URLs; when `false`, the handler inlines them as base64 first. Defaults to `true`. |
+
+`ImageProvider` is a single call:
+
+<Code
+  file="provider.ts"
+  lang="ts"
+  code={`interface ImageProvider {
+    generate(request: ImageGenRequest): Promise<ImageGenResult>
+  }`}
+/>
+
+The supporting types you'll touch when implementing one: `ChatMessage`, `ChatEvent`,
+`ChatTool`, `ChatToolCall`, `ChatContent`, `ChatRole`, `JsonSchema`,
+`ImageGenRequest`, `ImageGenResult`, `ImageRef`.
+
+## `wayflow/models/openai`
+
+Adapters for any OpenAI-compatible client — the official `openai` package, or any
+duck-typed match (a local server, Claude's compatible endpoint, …).
+
+### `createOpenAIProvider(options)`
+
+Wrap a chat client into an `LLMProvider`.
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `client` | `OpenAIChatClient` | — | An OpenAI-compatible client (`new OpenAI({ … })` or a duck-typed match). **Required.** |
+| `extraBody` | `Record<string, unknown>` | — | Merged into every request body — vendor fields the OpenAI shape doesn't cover. |
+| `structuredOutput` | `'jsonSchema'` / `'jsonObject'` | `'jsonSchema'` | How structured output is enforced; `'jsonObject'` for backends without native schema support. |
+| `acceptsImageUrls` | `boolean` | `true` | Set `false` for base64-only backends; remote images get inlined first. |
+
+### `createOpenAIImageProvider(options)`
+
+Wrap an image client into an `ImageProvider`.
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `client` | `OpenAIImageClient` | — | An OpenAI-compatible image client. **Required.** |
+| `extraBody` | `Record<string, unknown>` | — | Merged into every image request body. |

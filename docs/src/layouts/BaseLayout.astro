@@ -1,0 +1,96 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  BaseLayout — html shell, head, SEO, theme bootstrap
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+import '@/styles/docs.css'
+
+interface Props {
+  title: string
+  description?: string
+  /* 'article' for doc pages, 'website' for landing-style pages */
+  ogType?: 'website' | 'article'
+  /* Absolute or root-relative path to a 1200×630 share image */
+  image?: string
+}
+
+const SITE_NAME = 'Wayflow'
+const DEFAULT_DESCRIPTION =
+  'Wayflow is an embeddable visual workflow editor for the web — plain TypeScript and the DOM, no UI framework required.'
+const DEFAULT_OG_IMAGE = '/og-default.png'
+
+const { title, description, ogType = 'website', image } = Astro.props
+const fullTitle = title === SITE_NAME ? title : `${title} — ${SITE_NAME}`
+const desc = description ?? DEFAULT_DESCRIPTION
+
+// Canonical + absolute URLs require `site` in astro.config.
+const canonical = new URL(Astro.url.pathname, Astro.site).href
+const ogImage = new URL(image ?? DEFAULT_OG_IMAGE, Astro.site).href
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+
+    {/* Open Graph */}
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+
+    {/* Twitter */}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={desc} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    {/* Above-the-fold faces; the rest load on demand from docs.css @font-face. */}
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/hanken-grotesk-variable.woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/inter-variable.woff2"
+      crossorigin
+    />
+
+    {/* Resolve theme before paint to avoid a flash. */}
+    <script is:inline>
+      try {
+        const saved = localStorage.getItem('wf-docs-theme')
+        const theme =
+          saved ??
+          (matchMedia('(prefers-color-scheme: light)').matches
+            ? 'light'
+            : 'dark')
+        document.documentElement.setAttribute('data-theme', theme)
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <slot />
+    <script>
+      import { initDocs } from '@/scripts/docs'
+      initDocs()
+    </script>
+  </body>
+</html>

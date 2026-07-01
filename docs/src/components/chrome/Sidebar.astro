@@ -1,0 +1,38 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  Sidebar — documentation navigation (drawer on mobile)
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+import { hrefFor, isActive } from '@/lib/navigation'
+import { SIDEBAR } from '@/lib/sidebar'
+
+const currentPath = Astro.url.pathname
+---
+
+<nav class="sidebar scroll" aria-label="Documentation">
+  <div class="sidebar__close">
+    <span class="eyebrow">Documentation</span>
+    <button class="icon-btn" data-drawer-close aria-label="Close navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+    </button>
+  </div>
+
+  {
+    SIDEBAR.map((section) => (
+      <div class="nav-group">
+        <div class="nav-group__label">{section.title}</div>
+        {section.items.map((item) => (
+          <a
+            class:list={[
+              'nav-item',
+              isActive(currentPath, item.slug) && 'nav-item--active',
+            ]}
+            href={hrefFor(item.slug)}
+          >
+            {item.title}
+          </a>
+        ))}
+      </div>
+    ))
+  }
+</nav>

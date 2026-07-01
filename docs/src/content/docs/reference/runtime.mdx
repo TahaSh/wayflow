@@ -1,0 +1,219 @@
+---
+title: wayflow/runtime
+description: The execution engine — createRuntime, running graphs, tools, sessions, and pausing.
+---
+
+import Code from '@/components/content/Code.astro'
+
+The headless execution engine. It runs a graph with the handlers you register —
+no editor required.
+
+## `createRuntime(options?)`
+
+Creates a runtime that can run graphs.
+
+<Code
+  file="runtime.ts"
+  lang="ts"
+  code={`const runtime = createRuntime({ handlers, tools })`}
+/>
+
+### Options
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `handlers` | `Record<string, Handler>` | — | Maps each node type to the function that runs it (keyed `llm`, `imageGeneration`, …). See [Providers & models](/docs/concepts/providers-and-models). |
+| `tools` | `Record<string, Tool>` | — | Tools an LLM node may call; build them with `defineTool`. See [Tools](/docs/building-workflows/tools). |
+| `logger` | `Logger` | — | A diagnostics sink. See [Debugging](/docs/running-workflows/debugging). |
+| `debug` | `boolean` | `false` | Shorthand for a console logger; a `logger` wins over it. |
+
+### `Handler`
+
+The function that runs a node type — what you register in `handlers`. The built-in
+`createLLMHandler` / `createImageGenerationHandler` return one; a custom node type
+supplies its own. See [Custom node types](/docs/building-workflows/custom-node-types).
+
+<Code
+  file="handler.ts"
+  lang="ts"
+  code={`type Handler = (
+    node: Node,
+    inputs: Record<string, unknown>,
+    ctx: HandlerContext,
+  ) => Promise<unknown> | AsyncIterable<unknown>`}
+/>
+
+Return a `Promise` for a one-shot result, or an `async function*` to stream (each
+yield emits a chunk). `inputs` is keyed by the node's input-port id.
+
+**`HandlerContext`**
+
+| Member | Notes |
+| --- | --- |
+| `signal` | An `AbortSignal` for cancellation. |
+| `inputs` | The caller's run inputs (from `runtime.run({ inputs })`). |
+| `emit(event)` | Emit a `RuntimeEvent` into the run stream. |
+| `reportInputs(inputs)` | Replace the inputs shown for this node in run views with the values it actually used. |
+| `collectAsResult(fields)` | Contribute fields to the run's final result (last-write-wins on conflict). |
+| `tools` | The tools matching this node's tools-select config. |
+| `runGraph(graph, inputs?)` | Run a sub-graph on the same engine (a workflow exposed as a tool); resolves to its result. |
+
+## The `Runtime` handle
+
+| Method | Notes |
+| --- | --- |
+| `run(graph, options?)` | Run to the first outcome (completed or paused). Returns a `Promise<RunOutcome>`. |
+| `stream(graph, options?)` | Run and yield `RuntimeEvent`s as they happen (`AsyncIterable`) — for streaming into the editor or an SSE response. |
+| `describe()` | The registered tools with handlers stripped — a catalog safe to hand the editor. |
+
+### `RunOptions`
+
+| Option | Type | Notes |
+| --- | --- | --- |
+| `inputs` | `Record<string, unknown>` | Values for the workflow's Input fields. |
+| `signal` | `AbortSignal` | Abort the run — how cancellation works. |
+| `resume` | `{ checkpoint, decision }` | Resume a paused run from its checkpoint (see Sessions for the higher-level API). |
+
+### `RunOutcome`
+
+A run settles into one of two shapes, discriminated by `status`:
+
+| `status` | Carries | Means |
+| --- | --- | --- |
+| `'completed'` | `result: R` | The run finished; `result` holds the Output fields. |
+| `'paused'` | `suspension: Suspension` | A node suspended (e.g. human review); resume to continue. |
+
+## Tools
+
+| Function | Notes |
+| --- | --- |
+| `defineTool({ description, args, handler })` | Define a tool an LLM can call — a `description`, typed `args`, and the `handler` that does the work. See [Tools](/docs/building-workflows/tools). |
+| `defineToolMetadata({ description, args })` | The same shape without a handler — for the editor or client, which only need a tool's name and description. |
+| `graphToTool(graph, options?)` | Expose a whole workflow as one tool; `options.description` overrides the graph's own. See [Workflows as tools](/docs/running-workflows/workflows-as-tools). |
+| `graphsToTools(graphs)` | Turn many graphs into a tool map, keyed by each graph's name. |
+
+The object passed to `defineTool` (and to `defineToolMetadata`, minus `handler`):
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `description` | `string` | What the tool does — the model reads this to decide when to call it. |
+| `args` | `Record<string, ArgDecl>` | The typed arguments, e.g. `{ city: 'string' }`; the model fills them in. |
+| `handler` | `(args, ctx) => Promise<unknown>` | Runs the tool with the typed args and returns what the model sees back. |
+
+## Sessions
+
+Pause and resume runs across requests — human-in-the-loop on a server.
+
+| Function | Notes |
+| --- | --- |
+| `createRunSessions(runtime, { store? })` | Wrap a runtime with checkpoint storage so paused runs survive between requests. Defaults to in-memory. See [Human-in-the-loop](/docs/running-workflows/human-in-the-loop). |
+| `createMemoryCheckpointStore()` | The default in-memory `CheckpointStore` — swap for one backed by your database in production. |
+
+### The `RunSessions` handle
+
+| Method | Notes |
+| --- | --- |
+| `run(graph, options?)` | One-shot run to the first outcome; stores the checkpoint on a pause. The paused outcome carries the `runId`. |
+| `stream(graph, options?)` | Streaming run; stores and strips the checkpoint on a pause. Wrap in your transport (`streamResponse`). |
+| `resume(request)` | One-shot resume by `runId` → the next outcome, or `null` if the `runId` is unknown. |
+| `resumeStream(request)` | Streaming resume by `runId`, or `null` if unknown or already resumed. |
+| `cancel(runId)` | Drop a paused run's checkpoint without resuming. |
+| `listPending()` | Every waiting run — powers an approval inbox and the editor's re-attach. |
+| `getPending(runId)` | One waiting run by `runId`, or `null`. |
+
+`resume` and `resumeStream` take a **`ResumeRequest`**:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `runId` | `string` | The paused run to continue. |
+| `decision` | `{ branch, data? }` | The review outcome — which branch to route to, and optionally edited `data`. |
+| `signal` | `AbortSignal` | Abort the resumed run. |
+
+### `CheckpointStore`
+
+Implement this to persist paused runs in your own database.
+
+| Method | Notes |
+| --- | --- |
+| `save(runId, record)` | Store a paused run's checkpoint record. |
+| `load(runId)` | Load a record by `runId`, or `undefined`. |
+| `delete(runId)` | Remove a record — after a resume or cancel. |
+| `list()` | All stored records, for the pending inbox. |
+
+## Pausing a run
+
+| Export | Notes |
+| --- | --- |
+| `suspend(params?)` | Called inside a handler to pause the run for input, returning the reviewer's decision when resumed. See [Human-in-the-loop](/docs/running-workflows/human-in-the-loop). |
+
+**`SuspendParams`**
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `instructions` | `string` | A message shown to the reviewer about what to decide. |
+| `data` | `unknown` | The value under review, surfaced to the reviewer. |
+
+Two union types describe a run's branch and state:
+
+<Code
+  file="types.ts"
+  lang="ts"
+  code={`type ReviewBranch = 'approved' | 'rejected'
+type RunStatus = 'running' | 'completed' | 'paused' | 'cancelled' | 'error'`}
+/>
+
+- **`ReviewBranch`** — the `branch` you set in a resume `Decision` (which output
+  port the gate routes to).
+- **`RunStatus`** — a run's `status`, on a `RunOutcome` and on run-status events.
+
+## `wayflow/runtime/client`
+
+Drives a server-side runtime from the browser — what the editor's Run button calls.
+
+### `run(options)`
+
+Stream a run from your server endpoints into the editor. See [In the
+browser](/docs/running-workflows/in-the-browser).
+
+| Option | Type | Notes |
+| --- | --- | --- |
+| `url` | `string` | The endpoint that runs the workflow. **Required.** |
+| `editor` | `WorkflowEditor` | The editor to stream the run into. **Required.** |
+| `resumeUrl` | `string` | Endpoint that resumes a paused run. |
+| `cancelUrl` | `string` | Endpoint that drops a paused run's checkpoint. |
+| `inputs` | `Record<string, unknown>` | Values for the workflow's Input fields. |
+| `init` | `RequestInit`, or `() => RequestInit` | Per-request fetch options (auth headers, credentials); a function is resolved fresh per request. |
+
+`ApprovalDriver` is the editor capability that shows the approval card during a
+paused run — supplied by the editor automatically.
+
+## `wayflow/runtime/sse`
+
+Helpers for streaming a run over Server-Sent Events from your server.
+
+### `streamResponse(events, options?)`
+
+Wrap a runtime event stream as a web-standard `Response` — for servers built on the
+Fetch API. See [On a server](/docs/running-workflows/on-a-server).
+
+| Parameter | Type | Notes |
+| --- | --- | --- |
+| `events` | `AsyncIterable<RuntimeEvent>` | The stream from `runtime.stream()` or `sessions.stream()`. |
+| `options` | `StreamResponseOptions` | Optional status and extra headers (below). |
+
+**`StreamResponseOptions`**
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `status` | `number` | `200` | The response status code. |
+| `headers` | `Record<string, string>` | — | Extra headers, merged onto the SSE defaults. |
+
+### `writeSSE(res, events)`
+
+Stream events to a Node-style response instead — for servers not built on the Fetch
+API. Returns a `Promise<void>`.
+
+| Parameter | Type | Notes |
+| --- | --- | --- |
+| `res` | `SSEWritable` | A Node-style response — anything with `setHeader`, `write`, and `end`. |
+| `events` | `AsyncIterable<RuntimeEvent>` | The stream from `runtime.stream()` or `sessions.stream()`. |

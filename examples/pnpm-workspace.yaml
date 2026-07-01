@@ -1,0 +1,6 @@
+packages:
+  - quickstart
+  - custom-nodes
+  - low-level
+  - with-backend
+  - preview-mode

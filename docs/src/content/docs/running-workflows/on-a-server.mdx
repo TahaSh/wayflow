@@ -1,0 +1,119 @@
+---
+title: On a server
+description: Run workflows in your backend — execute a saved graph behind your own API, or stream the editor's Run to your server. Keys stay safe.
+---
+
+import Callout from '@/components/content/Callout.astro'
+import Code from '@/components/content/Code.astro'
+
+In production, workflows run on your server. That covers two scenarios, and you'll
+often use both: your **application** runs a saved workflow behind your own API,
+and — while building — the **editor's Run** button executes against your server and
+streams results back. Either way, provider keys stay server-side and your workflow
+logic never ships to the client.
+
+## Run a saved workflow
+
+This is the end goal for most products: a workflow is authored once in the editor,
+saved, and then run on demand with no editor in sight. A saved graph is just data —
+load it from your store, deserialize it, and hand it to the runtime:
+
+<Code
+  file="server.ts"
+  code={`const graph = deserialize(await loadWorkflow(id))
+
+  const outcome = await runtime.run(graph, { inputs })`}
+/>
+
+`runtime.run` resolves with the outcome, so wrap it in your own API route, a cron
+job, or a queue worker — wherever your product needs to execute the workflow. Want
+live progress instead of a single result? `runtime.stream` yields events as it
+goes.
+
+(`deserialize` is from `wayflow/core`; `loadWorkflow` is your own storage. See
+[Persistence & autosave](/docs/running-workflows/persistence) for saving graphs.)
+
+<Callout variant="tip" title="The host owns the keys">
+Because the runtime lives on your server, so do your provider keys — read them from
+the environment and they never reach the browser. See [Providers &
+models](/docs/concepts/providers-and-models) for wiring a real model.
+</Callout>
+
+## Drive it from the editor
+
+While you're building — or if your product lets people run workflows from the
+editor itself — the editor's **Run** executes on your server and streams back into
+the canvas. Add an endpoint that runs a graph and streams it.
+
+On a Fetch-API framework (Hono, Next.js route handlers, Bun, Deno),
+`streamResponse` (from `wayflow/runtime/sse`) returns a standard `Response`:
+
+<Code
+  file="server.ts"
+  code={`async function handleRun(req: Request): Promise<Response> {
+    const { graph, inputs } = await req.json()
+    return streamResponse(
+      runtime.stream(deserialize(graph), { inputs, signal: req.signal }),
+    )
+  }`}
+/>
+
+On Express or another Node `req`/`res` server, use `writeSSE` instead — you hand it
+the response object and it writes to it, rather than returning one:
+
+<Code
+  file="server.ts"
+  code={`app.post('/api/run', async (req, res) => {
+    const { graph, inputs } = req.body
+    await writeSSE(res, runtime.stream(deserialize(graph), { inputs }))
+  })`}
+/>
+
+The Fetch handler gets cancellation for free via `req.signal`; on Express, abort an
+`AbortController` on `req.on('close')` and pass its `signal` to `runtime.stream`.
+
+Then point the editor's `onRun` at `run` (from `wayflow/runtime/client`) with your
+endpoint's URL — it serializes the current graph, posts it, and streams the
+response back into the canvas:
+
+<Code
+  file="editor.ts"
+  code={`const editor = createWorkflowEditor(element, {
+    onRun: ({ inputs, signal }) =>
+      run({ url: '/api/run', editor, inputs, signal }),
+  })`}
+/>
+
+Same editor, same live streaming — and cancellation works end to end: the editor's
+**Cancel** aborts the request, which stops the run on the server.
+
+## Authenticating the request
+
+Most run endpoints sit behind auth. Pass `init` to add headers or credentials to
+the run, resume, and cancel calls. A static object covers a fixed token or
+cookies; a function is resolved fresh for every request, so short-lived tokens
+stay current:
+
+<Code
+  file="editor.ts"
+  code={`run({
+    url: '/api/run',
+    editor,
+    inputs,
+    signal,
+    init: () => ({ headers: { Authorization: getToken() } }),
+  })`}
+/>
+
+`init` also takes `credentials: 'include'` for cookie sessions, and the function
+receives a `kind` (`'run'`, `'resume'`, or `'cancel'`) if an endpoint ever needs
+different headers.
+
+## Where next
+
+- [Persistence & autosave](/docs/running-workflows/persistence) — save a workflow's
+  graph so you can load and run it later
+- [Human-in-the-loop](/docs/running-workflows/human-in-the-loop) — pause a run for
+  approval, then resume it
+- [Structured output](/docs/running-workflows/structured-output) — typed fields
+  back from an LLM

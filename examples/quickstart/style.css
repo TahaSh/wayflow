@@ -1,0 +1,29 @@
+:root {
+  color-scheme: light dark;
+  --bg: #0a0b10;
+  --text: hsl(240, 8%, 92%);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #fbfcfd;
+    --text: hsl(240, 8%, 14%);
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* The editor fills the viewport; dvh keeps it above mobile browser chrome. */
+#editor {
+  height: 100dvh;
+}

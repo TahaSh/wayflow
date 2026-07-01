@@ -1,0 +1,141 @@
+---
+title: wayflow
+description: The editor entry point — createWorkflowEditor and the handle it returns.
+---
+
+import Code from '@/components/content/Code.astro'
+
+The umbrella entry point. `createWorkflowEditor` mounts the editor into an element
+and returns a handle you drive it with.
+
+## `createWorkflowEditor(element, options?)`
+
+Mounts the editor into `element` and returns a [`WorkflowEditor`](#the-workfloweditor-handle).
+
+<Code
+  file="editor.ts"
+  lang="ts"
+  code={`const editor = createWorkflowEditor(element, { mode: 'preview' })`}
+/>
+
+### Options
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `mode` | `'edit'` / `'read-only'` / `'preview'` | `'edit'` | Which surface to show. See [Editor modes](/docs/customizing-the-editor/editor-modes). |
+| `preview` | `PreviewOptions` | — | Extras honored in `preview` mode (footer, key button, theme toggle, zoom). |
+| `nodeTypes` | `Record<string, NodeTypeDefinition>` | built-ins | The node types available; spread `BUILTIN_NODE_TYPES` to extend. See [Custom node types](/docs/building-workflows/custom-node-types). |
+| `portTypes` | `Record<string, PortTypeDefinition>` | built-ins | Colors and labels for data types. |
+| `nodeRenderers` | `Record<string, NodeContentRenderer>` | — | Custom rendering for a node's body on the canvas. |
+| `ui` | `EditorUIOptions` / `false` | — | Header, palette, panels, and toolbar. See [Layout & header](/docs/customizing-the-editor/layout). |
+| `onRun` | `OnRunCallback` | — | Runs the workflow; its presence is what shows the Run button. See [Running workflows](/docs/running-workflows/overview). |
+| `onReady` | `() => void` | — | Called once the editor has mounted. |
+| `graph` | `Graph` | empty | The initial graph. |
+| `viewport` | `Viewport` | — | The initial pan and zoom. |
+| `persistence` | `PersistenceConfig` | — | Autosave and load. See [Persistence](/docs/running-workflows/persistence). |
+| `showPortLabels` | `boolean` | `true` | Show labels beside ports. |
+| `llm` | `{ models?: ModelsOption }` | — | Models offered to LLM nodes. See [Providers & models](/docs/concepts/providers-and-models). |
+| `imageGeneration` | `{ models?: ModelsOption }` | — | Models offered to Image Generation nodes. |
+| `tools` | `Record<string, ToolMetadata>` | — | Tools selectable on LLM nodes. See [Tools](/docs/building-workflows/tools). |
+| `theme` | `'auto'` / `'light'` / `'dark'` | `'auto'` | Color theme. See [Theming](/docs/customizing-the-editor/theming). |
+| `icons` | `Record<string, string>` | — | Override node-type icons (SVG path data). |
+| `renderResultField` | `RenderResultField` | — | Custom rendering for a result field. See [Custom result rendering](/docs/customizing-the-editor/custom-result-rendering). |
+| `renderMarkdown` | `RenderMarkdown` | — | Render markdown-format string fields. |
+| `logger` | `Logger` | — | A diagnostics sink. See [Debugging](/docs/running-workflows/debugging). |
+| `debug` | `boolean` | `false` | Shorthand for a console logger. |
+
+## The `WorkflowEditor` handle
+
+The handle returned by `createWorkflowEditor` — for driving the editor after mount.
+
+### Graph
+
+| Method | Notes |
+| --- | --- |
+| `getGraph(): Graph` | A structural clone of the current graph. Captured node refs are snapshots. |
+| `export(): string` | Serialize the graph to a JSON string. |
+| `import(json: string): void` | Replace the graph from a JSON string. |
+| `getMetadata(): GraphMetadata` | The graph's name, description, and other metadata. |
+| `setMetadata(updates): void` | Patch the metadata. |
+
+### Editing
+
+| Method | Notes |
+| --- | --- |
+| `addNode(options): Node` | Add a node and return it. `options`: `{ type, position, data? }`. |
+| `removeNode(nodeId): void` | Remove the node and any edges connected to it. |
+| `addEdge(options)` | `options`: `{ sourceNodeId, sourcePortId, targetNodeId, targetPortId }`. Returns the new `Edge`, or `null` if the connection is invalid. |
+| `removeEdge(edgeId): void` | Remove the edge between two ports. |
+| `updateNodeData(nodeId, updates): void` | Patch a node's config data. |
+| `setNodeName(nodeId, name): void` | Set or clear a node's display name. |
+| `setNodePorts(nodeId, ports): void` | Replace a node's ports — for custom node types whose ports change with their config. |
+| `renamePort(nodeId, oldPortId, newPortId): void` | Rename a port, keeping its connected edges. |
+| `updateNodePreview(nodeId, preview): void` | Set or clear the small data preview shown on a node. |
+| `beginRename(nodeId): void` | Start an inline rename in the UI. |
+
+### Selection & clipboard
+
+| Method | Notes |
+| --- | --- |
+| `getSelection(): Selection` | The currently selected node ids. |
+| `selectNodes(nodeIds): void` / `selectAll(): void` | Replace the current selection. |
+| `copySelection(): void` / `cutSelection(): void` | Copy or cut the selection to the clipboard. |
+| `paste(opts?): void` | Paste the clipboard, optionally at a given canvas position. |
+| `canPaste(): boolean` | Whether the clipboard holds something pasteable. |
+| `duplicateSelection(): void` / `deleteSelection(): void` | Duplicate or delete the selected nodes. |
+
+### History
+
+| Method | Notes |
+| --- | --- |
+| `undo(): void` / `redo(): void` | Step backward or forward through edit history. |
+| `canUndo(): boolean` / `canRedo(): boolean` | Whether an undo or redo is available — e.g. to enable a button. |
+| `clearHistory(): void` | Drop all undo history. |
+| `untracked(fn): void` | Run mutations without adding a history entry. |
+
+### Viewport
+
+| Method | Notes |
+| --- | --- |
+| `getViewport(): Viewport` / `setViewport(partial): void` | Read or patch the pan and zoom — `{ x, y, zoom }`. |
+| `screenToCanvas(x, y): Position` | Map a screen point to canvas coordinates. |
+| `zoomIn(): void` / `zoomOut(): void` / `fitView(padding?): void` | Zoom in or out, or fit all nodes in view. |
+| `focusNode(nodeId): void` | Center and select a node. |
+| `getContainer(): HTMLElement` | The editor's mount element. |
+
+### Models & approvals
+
+| Method | Notes |
+| --- | --- |
+| `setModels({ llm?, imageGeneration? }): void` | Set selectable models after creation (e.g. once fetched). |
+| `onModelsChange(cb): () => void` | Subscribe; returns an unsubscribe function. |
+| `getModelAvailability(type)` | Returns `{ available, loading, reason? }`, or `undefined` for types without a model. |
+| `requestApproval(request)` | Show the approval card. `request`: `{ nodeId, instructions, data }`; resolves with `{ approved, data }`, or `null` if cancelled. See [Human-in-the-loop](/docs/running-workflows/human-in-the-loop). |
+| `runSession(fn): Promise<void>` | Run a function inside the cancellable run UI. |
+
+### Persistence & lifecycle
+
+| Method | Notes |
+| --- | --- |
+| `getPersistenceState()` | The current save status, or `null` if no persistence is configured. |
+| `save(): Promise<void>` | Trigger a save now. |
+| `destroy(): void` | Tear down the editor and release resources. |
+
+### Events
+
+`editor.on(type, callback)` subscribes and returns an unsubscribe function.
+
+| Event | Payload | Fires when |
+| --- | --- | --- |
+| `change` | `Graph` | Any change to the graph. |
+| `selectionChange` | `Selection` | The selection changes. |
+| `dataChange` | `{ nodeId, data }` | A node's config changes. |
+| `edgeAdd` / `edgeRemove` | `{ edge }` | An edge is added or removed. |
+| `metadataChange` | `{ metadata }` | The name or description changes. |
+| `nameChange` | `{ nodeId, name }` | A node is renamed. |
+| `viewportChange` | `{ viewport }` | Pan or zoom changes. |
+| `nodeDragStart` / `nodeDragEnd` | — | A node drag begins or ends. |
+| `render` | `{ nodeIds }` | Nodes re-render. |
+| `persistenceStateChange` | `PersistenceState` | The save status changes. |
+| `persistenceError` | `{ phase, error }` | A save or load fails. |
+| `contextmenu` | `{ nodeId?, selectionSize, canPaste, … }` | A context menu is requested. |

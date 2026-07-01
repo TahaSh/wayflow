@@ -1,0 +1,54 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  CodeTabs — tabbed Install / Usage card (landing hero)
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+import { Code as Highlighted } from 'astro:components'
+import { recolorTransformer, SHIKI_THEMES } from '@/lib/shiki'
+
+interface Props {
+  command: string
+  code: string
+  lang?: 'ts' | 'tsx' | 'js' | 'bash'
+}
+
+const { command, code, lang = 'ts' } = Astro.props
+---
+
+<div class="codetabs">
+  <div class="codetabs__bar">
+    <div class="codetabs__tabs" role="tablist">
+      <button
+        class="codetabs__tab is-active"
+        data-tab="install"
+        role="tab"
+        aria-selected="true"
+      >
+        Install
+      </button>
+      <button
+        class="codetabs__tab"
+        data-tab="usage"
+        role="tab"
+        aria-selected="false"
+      >
+        Usage
+      </button>
+    </div>
+    <button class="copy-btn" data-copy="__tab__" aria-label="Copy">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
+      <span data-copy-label>Copy</span>
+    </button>
+  </div>
+
+  <div class="codetabs__panel is-active" data-panel="install" role="tabpanel">
+    <div class="command">
+      <span class="prompt">$</span>
+      <span class="grow" data-cmd-text>{command}</span>
+    </div>
+  </div>
+
+  <div class="codetabs__panel" data-panel="usage" role="tabpanel">
+    <Highlighted code={code} lang={lang} themes={SHIKI_THEMES} defaultColor={false} transformers={[recolorTransformer]} wrap />
+  </div>
+</div>

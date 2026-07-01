@@ -1,0 +1,212 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  Landing — hero, frameworks, features, use cases
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+import Header from '@/components/chrome/Header.astro'
+import NavDrawer from '@/components/chrome/NavDrawer.astro'
+import SearchPalette from '@/components/chrome/SearchPalette.astro'
+import SiteFooter from '@/components/chrome/SiteFooter.astro'
+import CodeTabs from '@/components/content/CodeTabs.astro'
+import EditorEmbed from '@/components/content/EditorEmbed.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+
+const DESCRIPTION =
+  "An embeddable visual workflow editor for the web. Powered by AI when you want it, plain logic when you don't — and it works in any framework."
+const DOCS_HREF = '/docs/getting-started/introduction'
+const REPO_URL = 'https://github.com/TahaSh/wayflow'
+
+const MOUNT_SNIPPET = `import { createWorkflowEditor } from 'wayflow'
+
+const editor = createWorkflowEditor(document.getElementById('editor'))
+`
+
+// Framework logos are trademarks of their respective owners, shown only to
+// indicate compatibility (nominative fair use) — no affiliation or endorsement.
+// SVGs from the devicon set (MIT); the React and Angular marks are CC BY 4.0.
+const FRAMEWORKS = [
+  { name: 'React', logo: '/logos/react.svg' },
+  { name: 'Vue', logo: '/logos/vuejs.svg' },
+  { name: 'Svelte', logo: '/logos/svelte.svg' },
+  { name: 'Angular', logo: '/logos/angular.svg' },
+  { name: 'Solid', logo: '/logos/solidjs.svg' },
+  { name: 'Vanilla JS', logo: '/logos/javascript.svg' },
+]
+
+// Icon path geometry adapted from Lucide (ISC License) — © Lucide Contributors.
+// https://github.com/lucide-icons/lucide/blob/main/LICENSE
+const FEATURES = [
+  {
+    title: 'The whole editor, one call',
+    body: 'createWorkflowEditor() mounts the canvas, node palette, config panel, and run controls — a complete workspace, not a blank canvas you finish yourself.',
+    icon: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>',
+  },
+  {
+    title: 'It runs your workflows',
+    body: 'A real execution engine ships in the box. Prototype in the browser with no backend, then run the same graph on your server in production.',
+    icon: '<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>',
+  },
+  {
+    title: 'AI when you want it, logic when you don’t',
+    body: 'Built-in LLM, tool-calling, branching, and map-over-list nodes mix freely with your own deterministic steps. Reach for as much AI as the job needs — or none.',
+    icon: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>',
+  },
+  {
+    title: 'Pause for a human, resume later',
+    body: 'Suspend a run for an approval or a decision, then pick it right back up. Human-in-the-loop is built in, not bolted on.',
+    icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/>',
+  },
+  {
+    title: 'Bring your own models',
+    body: 'Provider-neutral LLM and image adapters. Plug in your keys and your vendor of choice — you’re never locked to one.',
+    icon: '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+  },
+  {
+    title: 'Brand it from one token',
+    body: 'Set the accent and every surface, hover, and focus ring recomputes. Light and dark stay in sync, so it looks native in your product.',
+    icon: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>',
+  },
+]
+
+const TRUST = [
+  'Custom node types',
+  'Full TypeScript types',
+  'Zero runtime dependencies',
+  'Tree-shakeable',
+  'MIT licensed',
+]
+
+const USE_CASES = [
+  {
+    title: 'Customer support',
+    body: 'Triage tickets, route them, and draft replies — with a human check when it counts.',
+    icon: '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/>',
+  },
+  {
+    title: 'Content & marketing',
+    body: 'Generate, translate, and repurpose copy across a few connected steps.',
+    icon: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M9 13h6M9 17h4"/>',
+  },
+  {
+    title: 'AI agents',
+    body: 'Let a model plan, call your tools, and act on its own.',
+    icon: '<path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2M20 14h2M15 13v2M9 13v2"/>',
+  },
+  {
+    title: 'Data pipelines',
+    body: 'Map over a list, enrich or classify each item, and merge the results.',
+    icon: '<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m2 12.9 8.58 3.91a2 2 0 0 0 1.66 0L20.8 12.9"/><path d="m2 17.9 8.58 3.91a2 2 0 0 0 1.66 0L20.8 17.9"/>',
+  },
+]
+---
+
+<BaseLayout title="Wayflow" description={DESCRIPTION}>
+  <Header />
+  <NavDrawer />
+
+  <main id="main">
+    <section class="hero">
+      <div class="hero__badge">
+        <span class="dot"></span> v0.1.0 <span style="opacity:.4">·</span>
+        <span class="v">MIT licensed</span>
+      </div>
+      <h1>The visual workflow editor<br />you <span class="accent">embed</span>, not rebuild.</h1>
+      <p class="hero__pitch">
+        Drop a complete workflow editor into your product — canvas, nodes, and a
+        runtime that actually runs them. Powered by AI when you want it, plain
+        logic when you don’t.
+      </p>
+
+      <div class="hero__cta">
+        <a class="btn btn--primary" href={DOCS_HREF}>
+          Get started
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </a>
+        <a class="btn btn--ghost" href={REPO_URL}>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.46-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7 0 0 .84-.27 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"></path></svg>
+          Star on GitHub
+        </a>
+      </div>
+
+      <div class="hero__start">
+        <CodeTabs command="npm install wayflow" code={MOUNT_SNIPPET} lang="ts" />
+      </div>
+
+      <div class="hero__stage">
+        <EditorEmbed demo="blog" />
+      </div>
+    </section>
+
+    <section class="frameworks">
+      <p class="frameworks__lead">
+        One editor. <strong>Any framework</strong> — or none.
+      </p>
+      <ul class="frameworks__row">
+        {
+          FRAMEWORKS.map((fw) => (
+            <li>
+              <img src={fw.logo} alt="" width="40" height="40" loading="lazy" />
+              <span>{fw.name}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="frameworks__note">
+        It’s plain TypeScript and the DOM. One call mounts it anywhere.
+      </p>
+    </section>
+
+    <section class="features">
+      <div class="section-head">
+        <span class="eyebrow">Why Wayflow</span>
+        <h2>Everything’s already in the box.</h2>
+      </div>
+      <div class="features__grid">
+        {
+          FEATURES.map((feature) => (
+            <div class="feature">
+              <div class="feature__ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" set:html={feature.icon} />
+              </div>
+              <h3>{feature.title}</h3>
+              <p>{feature.body}</p>
+            </div>
+          ))
+        }
+      </div>
+      <ul class="trust">
+        {TRUST.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+
+    <section class="usecases">
+      <div class="usecases__head">
+        <div class="usecases__heading">
+          <span class="eyebrow">What you can build</span>
+          <h2>From a quick helper to a full agent.</h2>
+        </div>
+        <p class="usecases__sub">
+          A few of the shapes teams reach for — the canvas is general, so build
+          whatever your product needs.
+        </p>
+      </div>
+      <div class="usecases__grid">
+        {
+          USE_CASES.map((useCase) => (
+            <div class="usecase">
+              <div class="usecase__ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={useCase.icon} />
+              </div>
+              <h3>{useCase.title}</h3>
+              <p>{useCase.body}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+  </main>
+
+  <SiteFooter />
+
+  <SearchPalette />
+</BaseLayout>

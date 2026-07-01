@@ -1,0 +1,21 @@
+{
+  "name": "@wayflow/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./src/index.ts",
+      "import": "./dist/ui.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@wayflow/core": "workspace:*",
+    "@wayflow/dom": "workspace:*",
+    "@wayflow/agent": "workspace:*"
+  }
+}

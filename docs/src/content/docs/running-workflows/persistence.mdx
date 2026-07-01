@@ -1,0 +1,88 @@
+---
+title: Persistence & autosave
+description: The editor autosaves the workflow as you build it — you choose where the graph is stored.
+---
+
+import Code from '@/components/content/Code.astro'
+
+The editor **autosaves** the workflow as you build, so a reload never loses work —
+you just tell it where to keep the data. And because what's saved is the
+workflow's graph, it's the very same data your backend later loads and runs.
+
+## Turn on autosave
+
+Pass a `persistence` adapter — a `load` and a `save`. The editor loads the saved
+workflow when it mounts and autosaves it (debounced) on every change. For local
+development, `createLocalStoragePersistence` (from `wayflow`) is one line:
+
+<Code
+  file="editor.ts"
+  code={`const editor = createWorkflowEditor(element, {
+    persistence: createLocalStoragePersistence('my-workflow'),
+  })`}
+/>
+
+Reload the page and your workflow is still there.
+
+## Store it anywhere
+
+For a real app, provide your own `load` and `save` — the editor calls them, and you
+decide where the data lives. `save` receives a **snapshot** (the graph plus the
+viewport); `load` returns it, or `null` when there's nothing saved yet:
+
+<Code
+  file="editor.ts"
+  code={`const editor = createWorkflowEditor(element, {
+    persistence: {
+      load: async () => {
+        const res = await fetch('/api/workflow')
+        return res.status === 404 ? null : res.json()
+      },
+      save: async (snapshot) => {
+        await fetch('/api/workflow', {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(snapshot),
+        })
+      },
+    },
+  })`}
+/>
+
+The editor shows a save-status indicator while it works and a loading skeleton
+until `load` resolves — none of which you wire up.
+
+## Autosave or manual
+
+So far we've passed the adapter to `persistence` directly. To change a setting,
+wrap it in an object instead — your `adapter` plus, for example, the autosave
+`debounce` in milliseconds:
+
+<Code
+  file="editor.ts"
+  code={`persistence: {
+    adapter: createLocalStoragePersistence('my-workflow'),
+    debounce: 1000,
+  }`}
+/>
+
+That object also takes a `trigger`. It's `autosave` by default; set
+`trigger: 'manual'` to turn autosave off and save only when *you* call
+`editor.save()` — for an explicit Save button. (`editor.save()` works either way,
+to force a save on demand.)
+
+## The saved graph is the runnable graph
+
+What you store here is the workflow's **graph** — the same data you
+[deserialize and run](/docs/running-workflows/on-a-server) on a server, or
+[expose as a tool](/docs/running-workflows/workflows-as-tools). Persistence is the
+*save* half of the loop; running it later is the other half.
+
+## Where next
+
+- [On a server](/docs/running-workflows/on-a-server) — load the saved graph and run
+  it in production
+- [Workflows as tools](/docs/running-workflows/workflows-as-tools) — expose your
+  saved workflows to an LLM
+- [Where workflows run](/docs/running-workflows/overview) — the run paths this
+  feeds

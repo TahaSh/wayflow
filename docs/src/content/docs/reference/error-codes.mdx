@@ -1,0 +1,83 @@
+---
+title: Error codes
+description: Every WayflowError code the runtime and editor can raise — the message and the actionable hint for each.
+---
+
+import Code from '@/components/content/Code.astro'
+
+Every error and validation warning carries a stable **`code`** — a `WF_…` string
+you can branch on or search your logs for. Compare it against the exact string:
+
+<Code
+  file="handle.ts"
+  lang="ts"
+  code={`if (error.code === 'WF_LLM_MODEL_NOT_FOUND') {
+    // …
+  }`}
+/>
+
+Each code's **message** is technical (the literal text the runtime emits, with
+`{placeholders}` filled at runtime); its **hint**, when present, is the actionable
+suggestion surfaced to the user. See [Debugging &
+diagnostics](/docs/running-workflows/debugging) for how these appear.
+
+## Runtime
+
+| Code | Message | Hint |
+| --- | --- | --- |
+| `WF_RUNTIME_NO_HANDLER` | `No handler registered for node type "{nodeType}"` | — |
+| `WF_RUNTIME_HANDLER_THREW` | `{reason}` (the handler's own thrown message) | — |
+| `WF_RUNTIME_EMPTY_GRAPH` | `Graph has no nodes` | — |
+| `WF_RUNTIME_CYCLE_DETECTED` | `Graph contains a cycle ({path}). Cyclic execution is not supported in v1.` | — |
+| `WF_RUNTIME_UNSCHEDULABLE_GRAPH` | `Graph is unschedulable (disconnected or already-failed dependency)` | — |
+| `WF_RUNTIME_MULTIPLE_NODES_FAILED` | `{count} nodes failed: {summary}` | — |
+| `WF_RUNTIME_MISSING_INPUT` | `Input "{field}" is required` | Provide a value or a default for this input, or make it not required. |
+| `WF_AGENT_UNKNOWN_NODE_TYPE` | `Unknown node type "{type}"` | — |
+| `WF_RUNTIME_INVALID_REGEX` | `Conditional 'matches' has an invalid regex pattern "{pattern}": {reason}` | Fix the regex pattern in this node's config. |
+| `WF_RUNTIME_MULTI_PORT_MISMATCH` | `Handler for node type "{nodeType}" returned a single value, but the node has {portCount} output ports ({portList}). Multi-port handlers must return an object keyed by port id.` | — |
+| `WF_RUNTIME_MAP_MULTIPLE_LISTS` | `This node runs once per item but received more than one list.` | Combine the lists into one with a Merge node so this node gets a single list. |
+| `WF_RUNTIME_MAP_SUSPEND` | `A node that runs once per item tried to pause for human review, which isn't supported mid-iteration.` | Move the Human Review node before or after the per-item node. |
+| `WF_RUNTIME_HTTP_ERROR` | `HTTP {status}: {detail}` | — |
+| `WF_RUNTIME_TOOL_NO_NAME` | `Workflow has no name` | Name the workflow in the editor's Settings so it can be used as a tool. |
+| `WF_RUNTIME_TOOL_NOT_REGISTERED` | `Graph references tool "{name}" but no handler is registered` | Remove this tool from the node's Tools list. |
+| `WF_RUNTIME_CHECKPOINT_STALE` | `Can't resume: the graph's structure changed since this checkpoint was created. A checkpoint can only resume against the same nodes, ports, and connections it paused on (editing a node's config is fine; adding, removing, or rewiring nodes is not).` | — |
+| `WF_RUNTIME_PAUSE_IN_TOOL` | `A workflow used as a tool tried to pause for human review, which a tool call cannot do.` | Remove the Human Review node from a workflow that runs as a tool. |
+| `WF_RUNTIME_REVIEW_NOT_RESUMABLE` | `This workflow has a human review step, but the editor isn't set up to handle it.` | — |
+| `WF_RUNTIME_RECURSION_LIMIT` | `Workflows-as-tools nested too deeply. A workflow may be calling itself as a tool.` | — |
+
+## LLM
+
+| Code | Message | Hint |
+| --- | --- | --- |
+| `WF_LLM_MODEL_NOT_FOUND` | `No handler registered for model "{model}"` | Pick an available model in this node's config. |
+| `WF_LLM_OUTPUT_WRONG_TYPE` | `The model handler returned {type}, but this node has a structured output schema` | — |
+| `WF_LLM_OUTPUT_INVALID_JSON` | `The model returned text that isn't valid JSON: {reason}` | Increase Max Tokens if the output was cut off, ask for JSON explicitly in the prompt, or try a different model. |
+| `WF_LLM_OUTPUT_TRUNCATED` | `The model hit its output-token limit before completing the structured response` | Increase Max Tokens in this node's config. |
+| `WF_LLM_OUTPUT_NOT_OBJECT` | `The model returned JSON that isn't an object` | Adjust the prompt to return a JSON object keyed by field name. |
+| `WF_LLM_OUTPUT_MISSING_FIELD` | `The model's output is missing the required field "{field}" (expected: {expectedKeys})` | Make sure the prompt asks the model to return every field in the output schema. |
+| `WF_TEMPLATE_VAR_MISSING` | `Template variable "{name}" has no value` | Connect an input to this variable's port, or set a default value in the node config. |
+| `WF_LLM_IMAGE_URL_UNSUPPORTED` | `This model doesn't accept image URLs, only uploaded (base64) images` | Upload the image instead of pasting a URL. |
+
+## Image generation
+
+| Code | Message | Hint |
+| --- | --- | --- |
+| `WF_IMAGE_MODEL_NOT_FOUND` | `No handler registered for model "{model}"` | Pick an available model in this node's config. |
+| `WF_IMAGE_GENERATION_FAILED` | `Image generation failed: {reason}` | Check the model name and that the requested size is supported by the backend (some models accept only specific dimensions). |
+| `WF_IMAGE_NO_OUTPUT` | `The image backend returned no image` | Verify the selected model supports image generation. |
+
+## Validation (Issues tab)
+
+| Code | Message | Hint |
+| --- | --- | --- |
+| `WF_VALIDATION_ORPHAN_NODE` | `This node isn't connected to anything` | Connect it to the rest of the workflow, or remove it. |
+| `WF_VALIDATION_NO_INPUT_NODE` | `The workflow has no Input node` | Add an Input node so the workflow can receive data. |
+| `WF_VALIDATION_NO_OUTPUT_NODE` | `The workflow has no Output node` | Add an Output node so the run produces a result. |
+| `WF_VALIDATION_VAR_UNSET` | `Template variable "{name}" has no input — it will be blank in the prompt` | Connect its port, or give it a value under Variable Defaults. |
+| `WF_VALIDATION_VAR_INVALID_NAME` | `Variable "{name}" can't contain spaces` | Use letters, numbers, and underscores instead — for example, image_1. |
+| `WF_VALIDATION_LLM_NO_PROMPT` | `This LLM node has no prompt` | Write a prompt or system prompt so the model has something to act on. |
+| `WF_VALIDATION_IMAGE_NO_PROMPT` | `This Image Generation node has no prompt` | Write a prompt describing the image to generate. |
+| `WF_VALIDATION_TOOL_NOT_IN_CATALOG` | `Tool "{name}" is not in the editor catalog` | Remove it from this node's Tools list. |
+| `WF_VALIDATION_OUTPUT_FIELD_MISSING` | `Output field "{name}" wasn't produced by the last run` | Connect an input to this field's port. |
+| `WF_VALIDATION_OUTPUT_TYPE_MISMATCH` | `Output field "{name}" expected {expected}, got {actual}` | — |
+| `WF_VALIDATION_DUPLICATE_UNIQUE_NODE` | `A workflow can have only one {label} node` | Keep only one. |

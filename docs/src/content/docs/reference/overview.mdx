@@ -1,0 +1,32 @@
+---
+title: Overview
+description: The map of the API reference — one published package, imported by subpath, plus the error-code catalog.
+---
+
+Wayflow ships as **one published package, `wayflow`**, with subpath exports. You
+pick the import by what you're doing — the high-level editor, the headless runtime,
+or a layer in between. Each row links to its reference page.
+
+| Import | What it is |
+| --- | --- |
+| [`wayflow`](/docs/reference/wayflow) | The editor — `createWorkflowEditor` and its handle. The high-level entry most apps use. |
+| [`wayflow/runtime`](/docs/reference/runtime) | The headless execution engine — run graphs, tools, sessions, pausing (plus the `/client` and `/sse` sub-entries). |
+| [`wayflow/models`](/docs/reference/models) | The LLM and image handlers and providers (plus `/openai`). |
+| [`wayflow/agent`](/docs/reference/agent) | Node-type definitions, validation, `WayflowError`, and logging. |
+| [`wayflow/core`](/docs/reference/core) | The plain-data graph model and `serialize`/`deserialize`. |
+| [`wayflow/dom`](/docs/reference/dom) | The low-level canvas editor — the editor surface without the workflow chrome. |
+
+## Styling
+
+There's no stylesheet to import — the editor injects its own styles when it mounts.
+The CSS is also published as `wayflow/ui/styles.css` and `wayflow/dom/styles.css`
+if you'd rather bundle or preload it yourself.
+
+## Error codes
+
+Every `WayflowError` and validation warning carries a stable `code`. The full
+catalog — code, message, and hint — is in [Error codes](/docs/reference/error-codes).
+
+A note on scope: this reference documents the **supported** public surface. A few
+internal helpers are exported but intentionally left out so they can change without
+breaking a documented promise.

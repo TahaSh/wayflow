@@ -1,0 +1,42 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  404 — not found
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+import Header from '@/components/chrome/Header.astro'
+import NavDrawer from '@/components/chrome/NavDrawer.astro'
+import BaseLayout from '@/layouts/BaseLayout.astro'
+---
+
+<BaseLayout title="Page not found">
+  <Header />
+  <NavDrawer />
+  <main id="main" class="notfound">
+    <span class="eyebrow">404</span>
+    <h1>This page doesn't exist.</h1>
+    <p>The page you're looking for may have moved or never existed.</p>
+    <a class="btn btn--primary" href="/">Back home</a>
+  </main>
+</BaseLayout>
+
+<style>
+  .notfound {
+    max-width: 32rem;
+    margin: 0 auto;
+    padding: 14vh 1.5rem;
+    text-align: center;
+  }
+  .notfound .eyebrow {
+    display: block;
+    margin-bottom: 14px;
+  }
+  .notfound h1 {
+    font-size: clamp(28px, 5vw, 40px);
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+  }
+  .notfound p {
+    color: var(--text-2);
+    margin: 0 0 26px;
+  }
+</style>

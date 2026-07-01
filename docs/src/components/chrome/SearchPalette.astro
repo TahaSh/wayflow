@@ -1,0 +1,66 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  SearchPalette — ⌘K command palette
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+// Results render from the curated nav tree for now; full-text Pagefind
+// indexing is wired in a later pass.
+
+import { hrefFor } from '@/lib/navigation'
+import { SIDEBAR } from '@/lib/sidebar'
+---
+
+<div class="palette-scrim" role="dialog" aria-modal="true" aria-label="Search documentation">
+  <div class="palette">
+    <div class="palette__input">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2" stroke-linecap="round"></path></svg>
+      <input type="text" placeholder="Search documentation…" aria-label="Search documentation" />
+      <kbd>esc</kbd>
+    </div>
+
+    <div class="palette__results scroll">
+      {/* Browse view — shown for an empty query and as the dev fallback */}
+      <div data-static>
+        {
+          SIDEBAR.map((section) => (
+            <>
+              <div class="palette__group">{section.title}</div>
+              {section.items.map((item) => (
+                <a
+                  class="palette__item"
+                  href={hrefFor(item.slug)}
+                  data-search={`${section.title} ${item.title}`.toLowerCase()}
+                >
+                  <span class="ic">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/></svg>
+                  </span>
+                  <span class="tt">
+                    <span class="t">{item.title}</span>
+                    <span class="d">{section.title}</span>
+                  </span>
+                  <span class="go">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                  </span>
+                </a>
+              ))}
+            </>
+          ))
+        }
+      </div>
+
+      {/* Live full-text results (Pagefind), injected at runtime */}
+      <div data-live hidden></div>
+
+      {/* No matches */}
+      <div class="palette__empty" data-empty hidden>
+        No results for “<span data-empty-query></span>”
+      </div>
+    </div>
+
+    <div class="palette__foot">
+      <span class="k"><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span class="k"><kbd>↵</kbd> select</span>
+      <span class="k"><kbd>esc</kbd> close</span>
+    </div>
+  </div>
+</div>

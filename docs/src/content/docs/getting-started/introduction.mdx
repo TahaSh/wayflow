@@ -1,0 +1,57 @@
+---
+title: Introduction
+description: An embeddable visual workflow editor for the web. Powered by AI when you want it, driven by pure logic when you don't — and it works in any framework.
+---
+
+import EditorEmbed from '@/components/content/EditorEmbed.astro'
+import EditorShot from '@/components/content/EditorShot.astro'
+
+Wayflow drops a complete workflow editor into your product. From a single call
+you get the canvas, the node palette, the config panel, and the run controls.
+Your users build workflows visually, and Wayflow runs them — in the browser or on
+your own server.
+
+Build whatever your product needs. Wire up LLMs to summarize, classify, or
+decide which branch a workflow takes, and mix them freely with deterministic
+steps that run on plain logic. Reach for as much AI as the job calls for, or none
+at all. The same building blocks cover both.
+
+It's plain TypeScript and the DOM, with no UI framework. It works the same
+inside React, Vue, Svelte, or no framework at all. Mounting the editor is a
+single DOM call.
+
+## See it running
+
+This is the editor, embedded right here — the same component you ship. Drag a
+node, wire it up, and press Run.
+
+<EditorEmbed />
+
+And here's what each part is called — the names used throughout these docs:
+
+<EditorShot
+  caption="The parts of the editor: the node palette, the canvas, the config panel, and the header."
+  alt="The Wayflow editor with its node palette, canvas, config panel, and header labelled."
+  src="editor-anatomy.png"
+/>
+
+## What you get
+
+- A drag-and-drop editor you mount into any element
+- [Built-in nodes](/docs/building-workflows/node-library) for the steps you reach
+  for most: input, output, LLM, tools, branching, merge, mapping over lists, and
+  image generation
+- [Custom nodes](/docs/building-workflows/custom-node-types) when the built-ins
+  aren't enough. Give them your own ports, config, and logic
+- A [runtime](/docs/running-workflows/overview) that runs workflows in the
+  browser or on your server
+- [Provider-neutral models](/docs/concepts/providers-and-models). Bring your own
+  LLM and image keys
+- Escape hatches at every layer: stay high-level, or drop down when you want more
+  control. You're never boxed in
+
+## Next steps
+
+Head to the [Quickstart](/docs/getting-started/quickstart) to get a working
+editor on screen in a few minutes. Or browse the
+[examples](/docs/examples) to see the kinds of workflows you can build.

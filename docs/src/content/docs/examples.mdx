@@ -1,0 +1,68 @@
+---
+title: Examples
+description: Runnable examples for the common ways to embed Wayflow — from the fastest start to a full server-backed app. Grab the one closest to your setup.
+---
+
+Each of these is a **complete, runnable example** in the repo, covering a distinct
+way to embed Wayflow. Skim for the one closest to your setup, then open its folder
+for the full code.
+
+## Quickstart
+
+The fastest way to get a canvas on screen. A single `createWorkflowEditor(...)`
+gives you the canvas, node palette, config panel, and run controls, opening on a
+seeded Input → LLM → Output graph that autosaves to `localStorage`. There's no
+backend, so nothing executes — it's a design surface. Start here.
+
+**Shows:** `createWorkflowEditor`, seeding a graph, the `models` lists, localStorage autosave.
+
+→ [examples/quickstart](https://github.com/TahaSh/wayflow/tree/main/examples/quickstart)
+
+## With a backend
+
+The production shape: the editor on the client, the runtime and your API keys on
+your **server**, connected over HTTP. A small server exposes the model list, a
+streaming run endpoint, and workflow persistence; the client streams runs into the
+canvas with cancellation. It opens on a **Support Ticket Triage** workflow — a list
+input, an LLM that runs once per item, a Merge `zip`, and Array Operations.
+
+**Shows:** server-side `createRuntime` + handlers, streaming runs, cancellation, persistence, and a real multi-node workflow.
+
+→ [examples/with-backend](https://github.com/TahaSh/wayflow/tree/main/examples/with-backend)
+
+## Custom nodes
+
+Add your own node type. It defines an **HTTP Request** node — its ports and config —
+registers it, renders a live method badge and URL field that stay in sync with the
+config panel, and gives it a custom icon. This is the editor side (how the node
+looks and configures); the runtime handler that makes it *do* something lives in the
+with-backend example.
+
+**Shows:** `NodeTypeDefinition` + `configSchema`, a custom node renderer, and the `icons` option.
+
+→ [examples/custom-nodes](https://github.com/TahaSh/wayflow/tree/main/examples/custom-nodes)
+
+## Preview mode
+
+Embed a read-only workflow in a page — to *show* a graph rather than edit it.
+`createWorkflowEditor(..., { mode: 'preview' })` drops the palette and structural
+editing, keeps pan / zoom / pinch, and shows a minimal shell; tapping a node slides
+in its Result — from the right on desktop, the bottom on a phone. Built for touch.
+It also wires up a **bring-your-own-key** button that flips to an accent state once
+a key is set — the shape a public embed uses so each visitor runs with their own key.
+
+**Shows:** `mode: 'preview'`, the `preview` options (footer, theme toggle, a stateful bring-your-own-key button), and the tap-a-node Result sheet.
+
+→ [examples/preview-mode](https://github.com/TahaSh/wayflow/tree/main/examples/preview-mode)
+
+## Low-level
+
+Drop the workflow shell and drive the `@wayflow/dom` canvas directly, with your own
+chrome. It uses `createEditor(...)` with a custom interactive **Counter** node
+(− / + buttons that write to node data), a **Display** node that mirrors it through
+the `dataChange` event, and a hand-built Import / Export toolbar. Reach for it when
+you need full control of the surrounding UI.
+
+**Shows:** `createEditor` from `wayflow/dom`, interactive nodes + the `dataChange` event, `serialize`/`deserialize`, and a hand-built toolbar.
+
+→ [examples/low-level](https://github.com/TahaSh/wayflow/tree/main/examples/low-level)

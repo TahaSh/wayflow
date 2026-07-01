@@ -1,0 +1,102 @@
+---
+title: Quickstart
+description: Get a working Wayflow editor — mounted and running a workflow — in a few minutes.
+---
+
+import Callout from '@/components/content/Callout.astro'
+import Code from '@/components/content/Code.astro'
+import Command from '@/components/content/Command.astro'
+import EditorShot from '@/components/content/EditorShot.astro'
+
+By the end of this page you'll have the full editor in your app — mounted, and
+running a workflow right in the browser — in about five minutes. No backend, no
+API key.
+
+## Install
+
+Add the package. It has zero runtime dependencies, and the styles inject
+themselves — there's no CSS file to import.
+
+<Command command="npm install wayflow" />
+
+## Mount the editor
+
+Point `createWorkflowEditor` at a container, and that one call brings the whole
+thing: the canvas, the node palette, the config panel, and the run controls. The
+editor fills its container, so give that container a height — an empty `<div>`
+has none of its own.
+
+<Code
+  file="index.html"
+  lang="html"
+  code={`<div id="editor" style="height: 600px"></div>`}
+/>
+
+<Code
+  file="editor.ts"
+  lang="ts"
+  code={`import { createWorkflowEditor } from 'wayflow'
+
+const editor = createWorkflowEditor(document.getElementById('editor'))
+`}
+/>
+
+That's the editor on screen. The height is the one thing it needs from you — the
+width comes from the page automatically. [Editor
+setup](/docs/getting-started/editor-setup) covers sizing, theming, and the rest.
+
+<EditorShot
+  caption="The full editor from that one call — canvas, node palette, config panel, and run controls."
+  alt="The Wayflow editor mounted in a page, showing an empty canvas with the node palette and run controls."
+  src="quickstart-editor.png"
+/>
+
+## Run a workflow
+
+To execute a graph, hand the editor a runtime to call when someone presses Run.
+The mock provider runs everything in the browser — no key, no backend — so you
+can try it instantly and swap in a real model later.
+
+<Code
+  file="editor.ts"
+  lang="ts"
+  code={`import { createWorkflowEditor } from 'wayflow'
+  import { createLLMHandler, createMockProvider } from 'wayflow/models'
+  import { createRuntime } from 'wayflow/runtime'
+  import { runInBrowser } from 'wayflow/runtime/client'
+
+  const runtime = createRuntime({
+    handlers: {
+      llm: createLLMHandler(createMockProvider()),
+    },
+  })
+
+  const editor = createWorkflowEditor(document.getElementById('editor'), {
+    llm: { models: ['gpt-5.4-mini'] },
+    onRun: ({ inputs, signal }) =>
+      runInBrowser({ runtime, editor, inputs, signal }),
+  })
+`}
+/>
+
+Now drag an **Input**, an **LLM**, and an **Output** from the palette, connect
+them, and press **Run** — the result streams into each node as it executes.
+
+<EditorShot
+  kind="clip"
+  caption="Building the graph from the palette and running it — results stream into each node."
+  alt="Dragging Input, LLM, and Output nodes onto the canvas, connecting them, and pressing Run as results stream in."
+  src="/clips/quickstart-build-and-run.mp4"
+/>
+
+<Callout variant="tip" title="Going to production?">
+Swap `createMockProvider()` for a real one (any OpenAI-compatible client) and run
+on your server instead of the browser. See
+[Running workflows](/docs/running-workflows/overview).
+</Callout>
+
+## Next steps
+
+- [Editor setup](/docs/getting-started/editor-setup) — sizing, theming, and dropping it into any framework
+- [Building workflows](/docs/building-workflows/node-library) — the built-in nodes and how to add your own
+- [Running workflows](/docs/running-workflows/overview) — execute in the browser or on your server, with real models

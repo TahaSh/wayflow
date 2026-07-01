@@ -1,0 +1,130 @@
+---
+title: wayflow/agent
+description: Node-type definitions, graph validation, structured errors, and logging — the building blocks behind the node library and the custom-node API.
+---
+
+import Code from '@/components/content/Code.astro'
+
+The layer beneath the editor and runtime: node-type definitions, validation,
+`WayflowError`, and the `Logger`.
+
+## Node types
+
+| Export | Notes |
+| --- | --- |
+| `BUILTIN_NODE_TYPES` | The registry of built-in node types; spread into the editor's `nodeTypes` to extend it. See [Custom node types](/docs/building-workflows/custom-node-types). |
+| `PORT_TYPES` | The registry of built-in data types (each a color + label); spread into `portTypes` to add your own. |
+
+### `NodeTypeDefinition`
+
+The shape of a custom node type.
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `label` | `string` | The node's display name. |
+| `category` | `string` | The palette group it appears under. |
+| `icon` | `string` | An icon name (optional). |
+| `ports` | `PortsShape`, or `PortsResolver` | Its ports — `{ inputs, outputs }` of `PortDefinition`s, either static or a `(data) => PortsShape` function of the node's config. |
+| `configSchema` | `Record<string, ConfigField>` | The fields shown in the config panel (below). |
+| `unique` | `boolean` | At most one of this type per graph (e.g. Input, Output). |
+| `mappable` | `boolean` | Whether it offers "Run once per item". Defaults to `true` for nodes with both inputs and outputs. |
+| `validate` | `NodeValidateFn` | `(node, ctx) => ValidationWarning[]` — static pre-run checks specific to this node type. |
+| `reconcileData` | `(data: NodeData) => NodeData` | Called after each config change to sync derived fields. |
+| `configPreview` | `ConfigPreviewFn`, or `null` | Renders a compact preview on the node body. |
+| `hideInlinePreview` | `boolean` | Hide the default inline result preview. |
+
+### `ConfigField`
+
+A field in a node's `configSchema`. Its `type` picks the control:
+
+<Code
+  file="types.ts"
+  lang="ts"
+  code={`type ConfigFieldType =
+    | 'text' | 'textarea' | 'number' | 'slider' | 'select'
+    | 'boolean' | 'json' | 'fields' | 'tools-select'
+    | 'image-size' | 'array-op'`}
+/>
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `type` | `ConfigFieldType` | Which control to render. |
+| `label` | `string` | The field's label. |
+| `default` | `unknown` | The initial value. |
+| `options` | `string[]` | Choices, for `'select'`. |
+| `emptyHint` | `string` | For `'select'` — shown in place of the dropdown when `options` is empty. |
+| `min` / `max` / `step` | `number` | Bounds, for `'slider'` and `'number'`. |
+| `withDefaults` | `boolean` | For `'fields'` — when `false`, hides the default-value editor. |
+| `lockNames` | `boolean` | For `'fields'` — rows are preset-managed; defaults are editable but rows aren't added/renamed. |
+| `allowMultiple` | `boolean` | For `'fields'` — each row offers a "Multiple values" toggle (the field holds a list). |
+| `allowRequired` | `boolean` | For `'fields'` — each row offers a "Required" toggle. |
+
+## Validation
+
+### `validateGraph(graph, registry, toolCatalog?)`
+
+Run the editor's live checks on a graph — no Input/Output node, an orphan node, an
+unfilled required input, an LLM with no prompt, a tool not in the catalog — and
+return the warnings (`[]` when clean).
+
+| Parameter | Type | Notes |
+| --- | --- | --- |
+| `graph` | `Graph` | The graph to check. |
+| `registry` | `NodeTypeRegistry` | The node types in play — `Record<string, NodeTypeDefinition>`. |
+| `toolCatalog` | `Record<string, ToolMetadata>` | The available tools, for the tool-not-in-catalog check. Optional. |
+
+### `ValidationWarning`
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `code` | `string` | The warning's `ERROR_CODE`. |
+| `message` | `string` | A plain-language description of the problem. |
+| `hint` | `string` | An actionable suggestion (optional). |
+| `nodeIds` | `string[]` | The nodes the warning points at (optional). |
+
+## Errors
+
+| Export | Notes |
+| --- | --- |
+| `WayflowError` | The error class the runtime and library throw — carries `code`, `message`, and an optional `hint`. |
+| `createError(code, params?, cause?)` | Build a `WayflowError` from a catalog code — for throwing structured errors from a custom node handler. |
+| `createWarning(code, params?, nodeIds?)` | Build a `ValidationWarning` from a catalog code. |
+
+`WayflowError` extends the native `Error`:
+
+<Code
+  file="error.ts"
+  lang="ts"
+  code={`class WayflowError extends Error {
+    readonly code: string
+    readonly hint?: string
+  }`}
+/>
+
+The full list of codes is in [Error codes](/docs/reference/error-codes).
+
+## Logging
+
+### `createConsoleLogger(options?)`
+
+A `Logger` that writes the `[wayflow] LEVEL message key=value` console format.
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `level` | `'debug'` / `'info'` / `'warn'` / `'error'` | `'debug'` | The lowest level to emit; quieter levels are dropped. |
+
+Implement `Logger` to route diagnostics to your own sink — each method takes a
+message and a bag of structured fields (`runId`, `nodeId`, …):
+
+<Code
+  file="logger.ts"
+  lang="ts"
+  code={`interface Logger {
+    debug(message: string, fields?: Record<string, unknown>): void
+    info(message: string, fields?: Record<string, unknown>): void
+    warn(message: string, fields?: Record<string, unknown>): void
+    error(message: string, fields?: Record<string, unknown>): void
+  }`}
+/>
+
+See [Debugging & diagnostics](/docs/running-workflows/debugging) for the guide.

@@ -1,0 +1,54 @@
+:root {
+  color-scheme: light dark;
+  --bg: #0a0b10;
+  --text: hsl(240, 8%, 92%);
+  --embed-border: rgba(255, 255, 255, 0.1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #eef0f4;
+    --text: hsl(240, 8%, 14%);
+    --embed-border: rgba(15, 20, 30, 0.12);
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 40px;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* The preview is embedded in the page, not full-bleed: a centered card with a
+   bounded width and rounded, clipped corners. */
+#editor {
+  width: 100%;
+  max-width: 1080px;
+  height: min(660px, 82vh);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--embed-border);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: 16px;
+  }
+
+  #editor {
+    height: 50vh;
+    border-radius: 12px;
+  }
+}

@@ -1,0 +1,143 @@
+---
+title: Editor modes
+description: The same editor, three modes — a full authoring surface, a read-only viewer, or a minimal embeddable preview. Pick the one that fits where it's going.
+---
+
+import Callout from '@/components/content/Callout.astro'
+import Code from '@/components/content/Code.astro'
+import EditorShot from '@/components/content/EditorShot.astro'
+
+The editor isn't only for building workflows. The same component can also show a
+finished workflow that nobody should change, or sit embedded in a page as a tidy,
+runnable preview. One option picks between these: `mode`. Reach for it when the
+editor is going somewhere other than your authoring screen — a customer-facing
+view, a read-only audit page, a marketing embed.
+
+There are three modes, and **every one of them can run a workflow**. They differ
+in how much of the editor's interface is on screen and whether anything can be
+changed.
+
+## Set the mode
+
+Pass `mode` when you create the editor. It defaults to `'edit'`, the full
+authoring experience you've seen so far.
+
+<Code
+  file="editor.ts"
+  code={`createWorkflowEditor(element, { mode: 'read-only' })`}
+/>
+
+The values are `'edit'`, `'read-only'`, and `'preview'`. The mode is set when the
+editor is created — you choose it based on where the editor is going, so a
+customer-facing screen mounts in `'read-only'` while your builder mounts in
+`'edit'`.
+
+## Edit
+
+The default. The full authoring editor: the node palette on the left, an editable
+config panel, the Issues tab, and the complete canvas toolbar with undo and redo.
+This is the surface for building and changing workflows, and it's what every other
+page in these docs assumes.
+
+You don't need to pass anything to get it — leaving `mode` off is the same as
+`mode: 'edit'`.
+
+## Read-only
+
+The same editor with nothing editable. The palette is gone, config fields become
+clean read-only displays instead of inputs, and the Issues tab is hidden. The
+canvas still pans, zooms, and fits, and nodes can still be moved around to explore
+the layout — but the workflow itself can't be changed.
+
+<Code
+  file="editor.ts"
+  code={`createWorkflowEditor(element, { mode: 'read-only' })`}
+/>
+
+Reach for this when someone should see a workflow without being able to touch it —
+a shared view of a published workflow, an audit or history screen, or a teammate
+who has view access but not edit access. It still runs, so a read-only viewer can
+execute the workflow and watch the result; it just can't rewire it.
+
+<EditorShot
+  caption="Read-only mode — no palette, config fields shown as plain values, and a status dot beside the workflow name."
+  alt="The editor in read-only mode, with no node palette and a config panel showing field values as read-only text rather than editable inputs."
+  src="read-only-mode.png"
+/>
+
+## Preview
+
+A read-only workflow wrapped in a minimal, embeddable shell. There's no palette
+and no floating toolbar — zoom lives in a compact control in the header instead,
+and the config and result panels open as a drawer when you select a node rather
+than sitting in a permanent side panel. The result is something that drops cleanly
+into a page, not something that looks like an app.
+
+<Code file="editor.ts" code={`createWorkflowEditor(element, { mode: 'preview' })`} />
+
+This is the mode for showing a workflow off — an embed in your docs or landing
+page, a template gallery, a finished workflow a customer can run with their own
+data. The live editor at the top of our [Introduction](/docs/getting-started/introduction)
+runs in preview mode.
+
+<EditorShot
+  kind="screenshot"
+  caption="Preview mode — a slim header with the workflow name, a status dot, zoom, and Run, and none of the surrounding editor controls."
+  alt="The editor in preview mode embedded in a page, showing a compact header with zoom and a Run button and no node palette or floating toolbar."
+  src="preview-mode.png"
+/>
+
+Preview has a few extras you can turn on through the `preview` option, honored
+only in this mode:
+
+<Code
+  file="editor.ts"
+  code={`createWorkflowEditor(element, {
+    mode: 'preview',
+    preview: {
+      themeToggle: true,
+      keyButton: {
+        onSubmit: (key) => {
+          // store the visitor's API key and run with it
+        },
+        isActive: () => Boolean(loadKey()),
+        activeLabel: 'Your key',
+      },
+    },
+  })`}
+/>
+
+- **`themeToggle`** adds a light/dark switch to the header, so an embed can flip
+  themes on its own without your page driving it.
+- **`keyButton`** adds a "bring your own key" button — handy for a public embed
+  where each visitor runs the workflow with their own API key. Its `onSubmit`
+  receives the key they enter. The button owns no storage, so tell it what state
+  to show: return `true` from `isActive` once a key is saved and it takes on an
+  accent style and swaps to `activeLabel`, so a returning visitor can see their
+  key is already set. It re-reads `isActive` after each submit.
+- **`footer`** customizes the caption strip along the bottom (or pass `false` to
+  hide it).
+- **`zoom`** toggles the header zoom control.
+
+## Running in any mode
+
+Every mode can run a workflow — the Run button appears whenever you provide an
+`onRun` handler, regardless of mode. What differs is how inputs are handled. In
+`edit` mode, values you enter to test a run are saved back as the Input node's
+defaults, since you're authoring. In `read-only` and `preview`, they're collected
+for that run only and never written into the workflow, because there's nothing to
+author.
+
+<Callout variant="note" title="How to actually run it">
+Wiring up `onRun` — in the browser or against your server — is covered in
+[Running workflows](/docs/running-workflows/overview).
+</Callout>
+
+## Where next
+
+- [Theming](/docs/customizing-the-editor/theming) — match the editor's colors to
+  your brand
+- [Running workflows](/docs/running-workflows/overview) — give the Run button
+  something to do
+- [Custom result rendering](/docs/customizing-the-editor/custom-result-rendering)
+  — control how a run's output is displayed

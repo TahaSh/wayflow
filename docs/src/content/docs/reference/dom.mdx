@@ -1,0 +1,69 @@
+---
+title: wayflow/dom
+description: The low-level canvas editor that createWorkflowEditor is built on — for the editor surface without the workflow chrome.
+---
+
+import Code from '@/components/content/Code.astro'
+
+The bare canvas editor. [`createWorkflowEditor`](/docs/reference/wayflow) is built on
+top of it; reach for `createEditor` only when you want the editor surface without
+the workflow chrome (header, palette, modes, models). Most apps don't need it.
+
+## `createEditor(container, options?)`
+
+Mount a bare editor into `container` and return an `Editor` handle.
+
+### `EditorOptions`
+
+| Option | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `graph` | `Graph` | empty | The initial graph. |
+| `viewport` | `Viewport` | — | The initial pan and zoom. |
+| `readOnly` | `boolean` | `false` | Disable structural editing (connect, delete, rename, box-select, menu); pan, zoom, selection, and repositioning stay live. |
+| `showPortLabels` | `boolean` | `true` | Show labels beside ports. |
+| `nodeRenderers` | `Record<string, NodeContentRenderer>` | — | Custom rendering for a node's body on the canvas (below). |
+| `persistence` | `PersistenceConfig` | — | Autosave and load (below). |
+| `customValidator` | `CustomValidator` | — | Extra graph validation beyond the built-in checks. |
+| `keyboardTarget` | `HTMLElement` | the container | Where keyboard shortcuts listen. |
+| `tooltipFactory` / `iconFactory` / `portTypeLabel` | `function` | — | Hooks for rendering tooltips, icons, and data-type labels. |
+
+### The `Editor` handle
+
+`createEditor` returns the same handle documented under
+[`wayflow`](/docs/reference/wayflow#the-workfloweditor-handle) — minus the
+workflow-only methods (`setModels`, `onModelsChange`, `getModelAvailability`,
+`requestApproval`, `runSession`).
+
+## Persistence
+
+| Function | Notes |
+| --- | --- |
+| `createLocalStoragePersistence(key): PersistenceAdapter` | A persistence adapter backed by `localStorage` under `key`. |
+
+### `PersistenceConfig`
+
+A `PersistenceAdapter`, or `{ adapter, trigger?, debounce? }` (a `PersistenceOptions`).
+
+**`PersistenceAdapter`**
+
+| Method | Notes |
+| --- | --- |
+| `load()` | Load the saved `EditorSnapshot`, or `null`. May be async. |
+| `save(snapshot)` | Persist an `EditorSnapshot`. May be async. |
+
+`EditorSnapshot` is `{ graph, viewport? }`. With `PersistenceOptions` you also get
+`trigger` (`'autosave'` / `'manual'`) and `debounce` (milliseconds).
+
+## Custom node rendering
+
+`NodeContentRenderer` is the value you put in `nodeRenderers`. It receives the
+node's container and a render context, and optionally returns a cleanup function:
+
+<Code
+  file="renderer.ts"
+  lang="ts"
+  code={`type NodeContentRenderer = (
+    container: HTMLElement,
+    context: NodeRenderContext,
+  ) => (() => void) | undefined`}
+/>

@@ -1,0 +1,52 @@
+---
+title: Where workflows run
+description: The editor designs a workflow; the runtime runs it. Run in the browser while building, and on your server in production — even with no editor involved.
+---
+
+You've built a workflow in the editor — now you run it. It helps to separate two
+things up front. The **editor** is a design tool: what it produces is a **graph**,
+plain data you can save. The **runtime** is a small TypeScript library that
+*executes* a graph. Running a workflow is a runtime call from your own code — the
+editor doesn't have to be involved at all.
+
+## Where the runtime runs
+
+The runtime is just TypeScript, so it runs wherever your code does:
+
+- **[In the browser](/docs/running-workflows/in-the-browser)** — no backend,
+  instant. Ideal for local development, prototypes, and demos.
+- **[On a server](/docs/running-workflows/on-a-server)** — for production. Keys
+  stay safe and runs are durable.
+
+The client/server split isn't a runtime *requirement*; it's a choice you make for
+security and durability.
+
+## From design to production
+
+Most products follow the same arc. You (or your users) **design** a workflow in
+the editor and **save** its graph — to a file, a database row, wherever you keep
+data. Then, in production, your backend **loads that graph and runs it on demand**
+— behind your own API, a scheduled job, a queue worker — and returns the result.
+The editor created the workflow; it isn't part of *running* it.
+
+While you're still building, the editor's own **Run** button executes the current
+graph and streams the result into the canvas — the same runtime, just driven
+interactively for testing. [On a server](/docs/running-workflows/on-a-server)
+shows both paths.
+
+## Also in this section
+
+- [Structured output](/docs/running-workflows/structured-output) — get typed
+  fields back from an LLM instead of free text
+- [Human-in-the-loop](/docs/running-workflows/human-in-the-loop) — pause a run for
+  someone to approve or edit before it continues
+- [Workflows as tools](/docs/running-workflows/workflows-as-tools) — let one
+  workflow call another
+- [Persistence & autosave](/docs/running-workflows/persistence) — save a
+  workflow's graph and load it back
+
+## Where next
+
+- [In the browser](/docs/running-workflows/in-the-browser) — the fastest way to
+  run; start here
+- [On a server](/docs/running-workflows/on-a-server) — the production path

@@ -1,0 +1,124 @@
+{
+  "name": "wayflow",
+  "version": "0.1.0",
+  "description": "An embeddable visual workflow editor for the web. Powered by AI when you want it, plain logic when you don't.",
+  "keywords": [
+    "workflow",
+    "workflow-editor",
+    "visual-editor",
+    "node-editor",
+    "node-graph",
+    "flow",
+    "ai",
+    "agent",
+    "llm",
+    "embeddable",
+    "typescript",
+    "editor"
+  ],
+  "homepage": "https://wayflow.build",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TahaSh/wayflow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TahaSh/wayflow/issues"
+  },
+  "author": "Taha Shashtari",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.17.1",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./core": {
+      "development": "./packages/core/src/index.ts",
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./dom": {
+      "development": "./packages/dom/src/index.ts",
+      "types": "./dist/dom/index.d.ts",
+      "import": "./dist/dom/index.js"
+    },
+    "./agent": {
+      "development": "./packages/agent/src/index.ts",
+      "types": "./dist/agent/index.d.ts",
+      "import": "./dist/agent/index.js"
+    },
+    "./runtime": {
+      "development": "./packages/runtime/src/index.ts",
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    },
+    "./runtime/sse": {
+      "development": "./packages/runtime/src/sse.ts",
+      "types": "./dist/runtime/sse.d.ts",
+      "import": "./dist/runtime/sse.js"
+    },
+    "./runtime/client": {
+      "development": "./packages/runtime/src/client.ts",
+      "types": "./dist/runtime/client.d.ts",
+      "import": "./dist/runtime/client.js"
+    },
+    "./models": {
+      "development": "./packages/models/src/index.ts",
+      "types": "./dist/models/index.d.ts",
+      "import": "./dist/models/index.js"
+    },
+    "./models/openai": {
+      "development": "./packages/models/src/openai.ts",
+      "types": "./dist/models/openai.d.ts",
+      "import": "./dist/models/openai.js"
+    },
+    "./dom/styles.css": "./dist/dom/styles.css",
+    "./ui/styles.css": "./dist/ui/styles.css"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "check": "biome check .",
+    "check:write": "biome check --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck:tests": "tsc -p tsconfig.test.json",
+    "prepublishOnly": "pnpm build && pnpm test",
+    "prepare": "simple-git-hooks"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.0",
+    "@types/node": "^25.5.0",
+    "@wayflow/agent": "workspace:*",
+    "@wayflow/core": "workspace:*",
+    "@wayflow/dom": "workspace:*",
+    "@wayflow/models": "workspace:*",
+    "@wayflow/runtime": "workspace:*",
+    "@wayflow/ui": "workspace:*",
+    "lint-staged": "^17.0.7",
+    "simple-git-hooks": "^2.13.1",
+    "tsdown": "^0.22.2",
+    "typescript": "~5.9.3",
+    "unrun": "^0.3.1",
+    "vitest": "^4.1.9"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm exec lint-staged"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,jsonc,css}": [
+      "biome check --write"
+    ]
+  }
+}

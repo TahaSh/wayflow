@@ -1,0 +1,35 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  Pager — previous / next links
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+import { getPager, hrefFor } from '@/lib/navigation'
+
+interface Props {
+  slug: string
+}
+
+const { slug } = Astro.props
+const { prev, next } = getPager(slug)
+---
+
+<nav class="pager" aria-label="Pagination" data-pagefind-ignore>
+  {
+    prev ? (
+      <a class="prev" href={hrefFor(prev.slug)}>
+        <span class="dir">← Previous</span>
+        <span class="ttl">{prev.title}</span>
+      </a>
+    ) : (
+      <span />
+    )
+  }
+  {
+    next && (
+      <a class="next" href={hrefFor(next.slug)}>
+        <span class="dir">Next →</span>
+        <span class="ttl">{next.title}</span>
+      </a>
+    )
+  }
+</nav>

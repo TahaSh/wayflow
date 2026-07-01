@@ -1,0 +1,65 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  EditorShot — a framed editor screenshot or micro-clip, with a caption
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+// Screenshots live in src/assets/docs and pass through Astro's optimizer
+// (responsive widths + webp + intrinsic dimensions, so no layout shift). Clips
+// live in public/ and are referenced by URL — Astro doesn't transcode video.
+// Until the asset exists, a labeled placeholder renders, so authoring shows
+// intent instead of a broken image.
+
+import { Image } from 'astro:assets'
+
+interface Props {
+  src?: string
+  alt: string
+  caption?: string
+  kind?: 'screenshot' | 'clip'
+  // Display width. `full` spans the prose column; `narrow`/`medium` keep a
+  // tightly-cropped element (a palette, a single panel) from being stretched.
+  size?: 'full' | 'medium' | 'narrow'
+}
+
+const { src, alt, caption, kind = 'screenshot', size = 'full' } = Astro.props
+
+const screenshots = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/docs/**/*.{png,jpg,jpeg,webp}',
+  { eager: true },
+)
+
+const isVideo = !!src && /\.(mp4|webm)$/.test(src)
+const image =
+  src && !isVideo ? screenshots[`/src/assets/docs/${src}`]?.default : undefined
+const hasMedia = isVideo || !!image
+---
+
+<figure class:list={['shot', size !== 'full' && `shot--${size}`]}>
+  {
+    isVideo ? (
+      <div class="shot__frame">
+        <video class="shot__media" src={src} autoplay muted loop playsinline aria-label={alt} />
+        <span class="shot__badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+          Loop
+        </span>
+      </div>
+    ) : image ? (
+      <Image
+        class="shot__media"
+        src={image}
+        alt={alt}
+        widths={[640, 960, 1280, 1600]}
+        sizes="(max-width: 820px) 100vw, 760px"
+        loading="lazy"
+        decoding="async"
+      />
+    ) : (
+      <div class="shot__placeholder" role="img" aria-label={alt}>
+        <span class="shot__placeholder-tag">{kind === 'clip' ? 'Clip' : 'Screenshot'}</span>
+        <span class="shot__placeholder-text">{caption ?? alt}</span>
+      </div>
+    )
+  }
+  {caption && hasMedia && <figcaption class="shot__caption">{caption}</figcaption>}
+</figure>

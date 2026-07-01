@@ -1,0 +1,115 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  EditorEmbed — the signature live-editor block
+//
+//  A framed window that mounts the real editor (lazily, when scrolled into
+//  view): the full editable editor on desktop, the preview shell on mobile.
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+interface Props {
+  demo?: string
+}
+
+const { demo = 'quickstart' } = Astro.props
+---
+
+<div class="embed embed--live" data-demo={demo}>
+  <div class="embed__viewport">
+    <div class="embed__canvas"></div>
+    <div class="embed__activate" aria-hidden="true">
+      <span class="embed__activate-pill">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+        Tap to interact
+      </span>
+    </div>
+  </div>
+  <div class="embed__footer">
+    <span class="embed__note"></span>
+    <button class="embed__action embed__key" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="4.5"></circle><path d="M11.2 11.2 19 19"></path><path d="M16.5 16.5 18.5 14.5"></path><path d="M19 19 21 17"></path></svg>
+      <span class="embed__key-label">Use your key</span>
+    </button>
+    <button class="embed__action embed__expand" type="button" aria-label="Toggle fullscreen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"></path></svg>
+      <span class="embed__expand-label">Fullscreen</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  interface EmbedModule {
+    default: (root: HTMLElement) => () => void
+  }
+
+  const TAP_SLOP = 10
+
+  const modules = import.meta.glob<EmbedModule>('../../embeds/*.ts')
+
+  const mountObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue
+        const root = entry.target as HTMLElement
+        mountObserver.unobserve(root)
+        const load = modules[`../../embeds/${root.dataset.demo}.ts`]
+        if (load) load().then((mod) => mod.default(root))
+      }
+    },
+    { rootMargin: '200px' },
+  )
+
+  // Re-arm the tap overlay once the embed scrolls mostly out of view, so the
+  // next pass scrolls straight through again.
+  const armObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.intersectionRatio < 0.5) {
+          ;(entry.target as HTMLElement).classList.remove('is-active')
+        }
+      }
+    },
+    { threshold: [0, 0.5, 1] },
+  )
+
+  // A clean tap activates the canvas; drags fall through to page scroll. Using
+  // pointerup (not click) so it responds on the first tap with no delay.
+  const setupActivate = (embed: HTMLElement) => {
+    const overlay = embed.querySelector<HTMLElement>('.embed__activate')
+    if (!overlay) return
+    let startX = 0
+    let startY = 0
+    let moved = false
+    overlay.addEventListener('pointerdown', (e) => {
+      startX = e.clientX
+      startY = e.clientY
+      moved = false
+    })
+    overlay.addEventListener('pointermove', (e) => {
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) > TAP_SLOP) {
+        moved = true
+      }
+    })
+    overlay.addEventListener('pointerup', () => {
+      if (!moved) embed.classList.add('is-active')
+    })
+    armObserver.observe(embed)
+  }
+
+  for (const el of document.querySelectorAll<HTMLElement>(
+    '.embed--live[data-demo]',
+  )) {
+    mountObserver.observe(el)
+    setupActivate(el)
+  }
+
+  document.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest('.embed__expand')
+    if (!button) return
+    const embed = button.closest<HTMLElement>('.embed')
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else if (embed?.requestFullscreen) {
+      embed.requestFullscreen()
+    }
+  })
+</script>

@@ -1,0 +1,38 @@
+---
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  Code — highlighted code block with filename + copy
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+import { Code as Highlighted } from 'astro:components'
+import { recolorTransformer, SHIKI_THEMES } from '@/lib/shiki'
+
+type Lang = 'ts' | 'tsx' | 'js' | 'jsx' | 'json' | 'bash' | 'css' | 'html'
+
+interface Props {
+  code: string
+  lang?: Lang
+  file?: string
+}
+
+const { code, lang = 'ts', file } = Astro.props
+---
+
+<div class="code">
+  <div class="code__bar">
+    {
+      file && (
+        <span class="code__file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v11a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/></svg>
+          {file}
+        </span>
+      )
+    }
+    <span class="code__lang">{lang}</span>
+    <span class="sp"></span>
+    <button class="copy-btn" data-copy="__prev__" aria-label="Copy code">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
+      <span data-copy-label>Copy</span>
+    </button>
+  </div>
+  <Highlighted code={code} lang={lang} themes={SHIKI_THEMES} defaultColor={false} transformers={[recolorTransformer]} wrap />
+</div>
