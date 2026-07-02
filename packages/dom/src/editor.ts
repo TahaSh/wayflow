@@ -311,6 +311,7 @@ export const createEditor = (
         canPaste: canPaste(),
       }),
     onNameCommit: (id, name) => setNodeName(id, name),
+    onZoomEnd: () => emit('viewportChange', { viewport: { ...viewport } }),
     onVirtualize: refreshVirtualization,
     customValidator: options.customValidator,
     isInScope: keyboardScope.isInScope,

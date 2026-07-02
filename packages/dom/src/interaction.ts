@@ -66,6 +66,7 @@ export interface SetupInteractionParams {
     client: { x: number; y: number }
   }) => void
   onNameCommit?: (nodeId: string, name: string) => void
+  onZoomEnd?: () => void
   // Re-run virtualization after a viewport change, restoring imperative state
   // on any node elements it re-creates.
   onVirtualize: () => void
@@ -97,6 +98,7 @@ export const setupInteractions = ({
   onNodeDragEnd,
   onContextMenu,
   onNameCommit,
+  onZoomEnd,
   onVirtualize,
   customValidator,
   isInScope,
@@ -129,6 +131,7 @@ export const setupInteractions = ({
   let preBoxSelection: Set<string>
 
   let virtualizationTimer: number | null = null
+  let zoomEndTimer: number | null = null
 
   let isConnecting = false
 
@@ -171,6 +174,15 @@ export const setupInteractions = ({
     }, 100)
   }
 
+  const scheduleZoomEnd = () => {
+    if (!onZoomEnd) return
+    if (zoomEndTimer) window.clearTimeout(zoomEndTimer)
+    zoomEndTimer = window.setTimeout(() => {
+      onZoomEnd()
+      zoomEndTimer = null
+    }, 150)
+  }
+
   // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
   //  Zoom Handler
   // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -198,6 +210,7 @@ export const setupInteractions = ({
       viewport,
     })
     scheduleVirtualization()
+    scheduleZoomEnd()
   }
 
   // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -532,6 +545,7 @@ export const setupInteractions = ({
         viewport,
       })
       scheduleVirtualization()
+      scheduleZoomEnd()
     }
 
     pinchPrevDist = dist
@@ -932,6 +946,7 @@ export const setupInteractions = ({
     window.removeEventListener('pointerup', onTrackedPointerUp)
     window.removeEventListener('pointercancel', onTrackedPointerUp)
     window.removeEventListener('pointermove', onPinchMove)
+    if (zoomEndTimer) window.clearTimeout(zoomEndTimer)
   }
 
   return { destroy, beginRename }
