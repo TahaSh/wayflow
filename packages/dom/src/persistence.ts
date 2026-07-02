@@ -1,9 +1,4 @@
-import {
-  deserialize,
-  type Graph,
-  serialize,
-  type Viewport,
-} from '@wayflow/core'
+import type { Graph, Viewport } from '@wayflow/core'
 
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 //  Constants
@@ -42,6 +37,7 @@ export type PersistencePhase =
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
 export interface EditorSnapshot {
+  version: number
   graph: Graph
   viewport?: Viewport
 }
@@ -66,21 +62,16 @@ export const createLocalStoragePersistence = (
     const raw = localStorage.getItem(key)
     if (!raw) return null
     try {
-      const parsed = JSON.parse(raw) as { graph: string; viewport?: Viewport }
-      return { graph: deserialize(parsed.graph), viewport: parsed.viewport }
+      const snapshot = JSON.parse(raw) as EditorSnapshot
+      // No version means corrupt or a pre-version format — treat as empty; the next save overwrites it.
+      if (typeof snapshot.version !== 'number') return null
+      return snapshot
     } catch {
-      // Corrupt or incompatible value — fall back to the seed; the next save overwrites it.
       return null
     }
   },
   save: (snapshot) => {
-    localStorage.setItem(
-      key,
-      JSON.stringify({
-        graph: serialize(snapshot.graph),
-        viewport: snapshot.viewport,
-      }),
-    )
+    localStorage.setItem(key, JSON.stringify(snapshot))
   },
 })
 

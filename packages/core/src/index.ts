@@ -74,7 +74,7 @@ export {
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 //  Serializer
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-export { deserialize, serialize } from './serializer'
+export { deserialize, GRAPH_VERSION, serialize } from './serializer'
 
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 //  Text utilities
