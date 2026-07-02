@@ -1,9 +1,11 @@
 import { DEFAULTS, type Graph, syncCounters } from './model'
 
+export const GRAPH_VERSION = 1
+
 type SerializedObject = { version: number; graph: Graph }
 
 export const serialize = (graph: Graph): string => {
-  return JSON.stringify({ version: 1, graph })
+  return JSON.stringify({ version: GRAPH_VERSION, graph })
 }
 
 export const deserialize = (json: string): Graph => {

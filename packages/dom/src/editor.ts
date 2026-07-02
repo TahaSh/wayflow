@@ -11,6 +11,7 @@ import {
   deselectAll,
   deserialize,
   type Edge,
+  GRAPH_VERSION,
   type Graph,
   type GraphMetadata,
   getConnectedEdges,
@@ -887,7 +888,11 @@ export const createEditor = (
   if (options.persistence) {
     persistence = setupPersistence({
       config: options.persistence,
-      getSnapshot: () => ({ graph: getGraph(), viewport: getViewport() }),
+      getSnapshot: () => ({
+        version: GRAPH_VERSION,
+        graph: getGraph(),
+        viewport: getViewport(),
+      }),
       applySnapshot: (snapshot) => {
         importGraph(serialize(snapshot.graph))
         // import doesn't restore the viewport — reapply it.

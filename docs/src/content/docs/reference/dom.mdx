@@ -51,8 +51,10 @@ A `PersistenceAdapter`, or `{ adapter, trigger?, debounce? }` (a `PersistenceOpt
 | `load()` | Load the saved `EditorSnapshot`, or `null`. May be async. |
 | `save(snapshot)` | Persist an `EditorSnapshot`. May be async. |
 
-`EditorSnapshot` is `{ graph, viewport? }`. With `PersistenceOptions` you also get
-`trigger` (`'autosave'` / `'manual'`) and `debounce` (milliseconds).
+`EditorSnapshot` is `{ version, graph, viewport? }` — `version` records the
+graph-format version so stored snapshots stay forward-compatible. With
+`PersistenceOptions` you also get `trigger` (`'autosave'` / `'manual'`) and
+`debounce` (milliseconds).
 
 ## Custom node rendering
 
