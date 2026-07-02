@@ -1,6 +1,6 @@
 {
   "name": "wayflow",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "An embeddable visual workflow editor for the web. Powered by AI when you want it, plain logic when you don't.",
   "keywords": [
     "workflow",

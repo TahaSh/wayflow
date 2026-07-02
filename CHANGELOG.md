@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.2.0] - 2026-07-02
+
+### Changed
+
+- **Editor snapshots now carry a `version`** — `EditorSnapshot` is now
+  `{ version, graph, viewport? }`, stamped from a single `GRAPH_VERSION` so every
+  persisted snapshot records the graph-format version and stays
+  forward-compatible. **Breaking:** the snapshot shape changed — a custom
+  persistence adapter that builds or reads a snapshot should account for the new
+  field. The built-in localStorage adapter handles it automatically.
+
+### Fixed
+
+- **Toolbar zoom readout after wheel/pinch** — the zoom percentage now updates
+  after zooming with the mouse wheel or a pinch gesture, not only from the +/-
+  buttons. It refreshes once the gesture settles.
+
 ## [0.1.2] - 2026-07-02
 
 ### Fixed
@@ -55,7 +72,8 @@ First public release — an embeddable visual workflow editor for the web.
 - Full TypeScript types, zero runtime dependencies, and a tree-shakeable
   umbrella package. MIT licensed.
 
-[Unreleased]: https://github.com/TahaSh/wayflow/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/TahaSh/wayflow/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/TahaSh/wayflow/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/TahaSh/wayflow/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/TahaSh/wayflow/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/TahaSh/wayflow/releases/tag/v0.1.0
