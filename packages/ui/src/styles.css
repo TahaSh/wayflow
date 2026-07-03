@@ -72,6 +72,7 @@
   --wf-bg-surface: #0f1115;
   --wf-bg-surface-2: #14171c;
   --wf-bg-surface-3: #1a1d24;
+  --wf-chrome-bg: #0c0e13;
   --wf-bg-hover: rgba(255, 255, 255, 0.04);
   --wf-bg-active: rgba(255, 255, 255, 0.07);
   --wf-bg-selected: rgba(55, 160, 255, 0.06);
@@ -83,9 +84,9 @@
   --wf-border-focus: #37a0ff;
 
   --wf-text: rgba(245, 246, 248, 0.96);
-  --wf-text-secondary: rgba(245, 246, 248, 0.66);
-  --wf-text-tertiary: rgba(245, 246, 248, 0.46);
-  --wf-text-quaternary: rgba(245, 246, 248, 0.3);
+  --wf-text-secondary: rgba(245, 246, 248, 0.72);
+  --wf-text-tertiary: rgba(245, 246, 248, 0.62);
+  --wf-text-quaternary: rgba(245, 246, 248, 0.55);
   --wf-icon-default: #8a8d92;
   --wf-text-on-accent: #06121b;
 
@@ -142,6 +143,7 @@
   --wf-bg-surface: #ffffff;
   --wf-bg-surface-2: #fbfcfd;
   --wf-bg-surface-3: #f3f5f8;
+  --wf-chrome-bg: var(--wf-bg-surface-3);
   --wf-bg-hover: rgba(15, 20, 30, 0.04);
   --wf-bg-active: rgba(15, 20, 30, 0.07);
   --wf-bg-selected: rgba(22, 115, 214, 0.06);
@@ -217,6 +219,7 @@
   --wf-mono-font: var(--wf-mono);
   --wf-hover-bg: var(--wf-bg-hover);
   --wf-input-bg: var(--wf-bg-surface-3);
+  --wf-control-bg: var(--wf-bg-surface-3);
   --wf-panel-bg: var(--wf-bg-surface);
   --wf-node-palette-bg: var(--wf-bg-surface);
   --wf-surface: var(--wf-bg-surface);
@@ -412,7 +415,8 @@
 .wf-node-palette {
   flex: 0 0 208px;
   min-width: 0;
-  background: var(--wf-bg-canvas);
+  background: var(--wf-chrome-bg);
+  --wf-control-bg: var(--wf-bg-surface-2);
   overflow-y: auto;
   padding: 14px 10px;
   display: flex;
@@ -463,7 +467,7 @@
   padding: 7px 10px;
   margin: 2px 4px 8px;
   border-radius: var(--wf-radius-md);
-  background: var(--wf-bg-surface-3);
+  background: var(--wf-control-bg);
   border: 1px solid var(--wf-border-subtle);
   color: var(--wf-text-tertiary);
 }
@@ -531,7 +535,7 @@
 }
 
 .wf-node-palette-item-disabled {
-  opacity: 0.4;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -548,7 +552,7 @@
   height: 22px;
   flex-shrink: 0;
   border-radius: var(--wf-radius-sm);
-  background: var(--wf-bg-surface-3);
+  background: var(--wf-control-bg);
   border: 1px solid var(--wf-border-subtle);
   font-family: var(--wf-mono);
   font-size: 11px;
@@ -623,7 +627,8 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  background: var(--wf-bg-canvas);
+  background: var(--wf-chrome-bg);
+  --wf-control-bg: var(--wf-bg-surface-2);
   overflow: hidden;
   border: 1px solid var(--wf-border-subtle);
   border-radius: var(--wf-node-palette-radius);
@@ -747,7 +752,7 @@
   gap: 2px;
   margin: 12px 12px 0;
   padding: 3px;
-  background: var(--wf-bg-surface-3);
+  background: var(--wf-control-bg);
   border: 1px solid var(--wf-border-subtle);
   border-radius: var(--wf-radius-md);
 }
@@ -777,7 +782,6 @@
 .wf-inspector-tab-active {
   background: var(--wf-bg-surface);
   color: var(--wf-text);
-  box-shadow: var(--wf-shadow-1);
 }
 
 .wf-inspector-body {
@@ -904,7 +908,7 @@
   width: 100%;
   height: var(--wf-control-h);
   padding: 7px 10px;
-  background-color: var(--wf-bg-surface-3);
+  background-color: var(--wf-control-bg);
   border: 1px solid var(--wf-border-subtle);
   border-radius: var(--wf-radius-md);
   color: var(--wf-text);
@@ -1529,7 +1533,7 @@
   font-size: var(--wf-fs-xs);
   font-weight: var(--wf-fw-med);
   line-height: 1.4;
-  background: var(--wf-bg-surface-3);
+  background: var(--wf-control-bg);
   color: var(--wf-text);
 }
 
@@ -1700,6 +1704,7 @@ button.wf-control-badge {
   gap: 9px;
   padding: 10px;
   background: var(--wf-bg-surface-2);
+  --wf-control-bg: var(--wf-bg-surface-3);
   border: 1px solid var(--wf-border-subtle);
   border-radius: var(--wf-radius-md);
 }
@@ -1780,7 +1785,7 @@ button.wf-control-badge {
   display: inline-flex;
   gap: 2px;
   padding: 2px;
-  background: var(--wf-bg-surface-3);
+  background: var(--wf-control-bg);
   border: 1px solid var(--wf-border-subtle);
   border-radius: var(--wf-radius-md);
 }
@@ -1805,7 +1810,6 @@ button.wf-control-badge {
 .wf-seg__btn[data-active="true"] {
   background: var(--wf-bg-surface);
   color: var(--wf-text);
-  box-shadow: var(--wf-shadow-1);
 }
 
 /* Image-size field */
@@ -2368,7 +2372,7 @@ button.wf-control-badge {
   align-items: center;
   gap: 2px;
   padding: 4px;
-  background: color-mix(in oklab, var(--wf-bg-surface-3) 92%, transparent);
+  background: color-mix(in oklab, var(--wf-bg-surface-2) 92%, transparent);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   backdrop-filter: blur(20px) saturate(160%);
   border: 1px solid var(--wf-border-subtle);
@@ -2528,7 +2532,7 @@ button.wf-control-badge {
   justify-content: space-between;
   gap: var(--wf-s-4);
   padding: var(--wf-s-3) var(--wf-s-5);
-  background: var(--wf-bg-surface-2);
+  background: var(--wf-chrome-bg);
   border-top: 1px solid var(--wf-border-hair);
   font-size: var(--wf-fs-xs);
   color: var(--wf-text-tertiary);
@@ -2560,14 +2564,9 @@ button.wf-control-badge {
   align-items: center;
   gap: var(--wf-s-4, 12px);
   padding: var(--wf-s-3, 8px) var(--wf-s-5, 16px);
-  background: var(--wf-bg-surface-2);
+  background: var(--wf-chrome-bg);
   border-bottom: 1px solid var(--wf-border-hair);
   flex: 0 0 auto;
-}
-
-.wf-shell[data-theme="light"] .wf-shell-header,
-.wf-shell[data-theme="light"] .wf-preview-footer {
-  background: var(--wf-bg-surface-3);
 }
 
 .wf-shell-header-title-cluster {
@@ -2917,11 +2916,8 @@ button.wf-control-badge {
 
 .wf-drawer {
   position: relative;
-  background: linear-gradient(
-    180deg,
-    var(--wf-bg-surface-2),
-    var(--wf-bg-surface)
-  );
+  background: var(--wf-chrome-bg);
+  --wf-control-bg: var(--wf-bg-surface-2);
   border: 1px solid var(--wf-border-default);
   box-shadow: var(--wf-shadow-modal);
   display: flex;
