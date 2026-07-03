@@ -33,6 +33,7 @@
 :root,
 [data-theme="dark"] {
   --canvas: #0a0b10;
+  --chrome: #0c0e13;
   --surface: #0f1115;
   --raised: #14171c;
   --raised-2: #1a1d24;
@@ -70,6 +71,7 @@
 /* ---- Tokens : LIGHT ---- */
 [data-theme="light"] {
   --canvas: #fbfcfd;
+  --chrome: #f3f5f8;
   --surface: #ffffff;
   --raised: #f3f5f8;
   --raised-2: #eaeef3;
@@ -1039,7 +1041,7 @@ kbd {
   min-height: 38px;
   padding: 0 14px;
   border-top: 1px solid var(--border);
-  background: var(--raised);
+  background: var(--chrome);
   font-size: 11.5px;
   color: var(--text-3);
 }
