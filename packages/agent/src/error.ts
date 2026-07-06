@@ -46,6 +46,7 @@ export const ERROR_CODE = {
   LLM_OUTPUT_MISSING_FIELD: 'WF_LLM_OUTPUT_MISSING_FIELD',
   TEMPLATE_VAR_MISSING: 'WF_TEMPLATE_VAR_MISSING',
   LLM_IMAGE_URL_UNSUPPORTED: 'WF_LLM_IMAGE_URL_UNSUPPORTED',
+  LLM_TEMPERATURE_UNSUPPORTED: 'WF_LLM_TEMPERATURE_UNSUPPORTED',
   IMAGE_MODEL_NOT_FOUND: 'WF_IMAGE_MODEL_NOT_FOUND',
   IMAGE_GENERATION_FAILED: 'WF_IMAGE_GENERATION_FAILED',
   IMAGE_NO_OUTPUT: 'WF_IMAGE_NO_OUTPUT',
@@ -148,6 +149,10 @@ const ERROR_DEFINITIONS: Record<ErrorCode, ErrorDefinition> = {
     message: () =>
       "This model doesn't accept image URLs, only uploaded (base64) images",
     hint: 'Upload the image instead of pasting a URL.',
+  },
+  [ERROR_CODE.LLM_TEMPERATURE_UNSUPPORTED]: {
+    message: () => "This model doesn't support a custom temperature",
+    hint: 'Set Temperature to Auto in this node, or pick a model that accepts a custom temperature.',
   },
   [ERROR_CODE.IMAGE_MODEL_NOT_FOUND]: {
     message: (params) => `No handler registered for model "${params?.model}"`,

@@ -12,6 +12,7 @@ import {
   createJsonInput,
   createJsonValueDisplay,
   createNumberInput,
+  createOptionalSliderInput,
   createSelectInput,
   createSliderInput,
   createTextarea,
@@ -120,13 +121,22 @@ const DEFAULT_FIELD_RENDERERS: Record<ConfigField['type'], RenderField> = {
       max: field.max,
     }),
   slider: ({ field, value, onChange }) =>
-    createSliderInput({
-      value: (value as number) ?? field.min ?? 0,
-      onChange,
-      min: field.min ?? 0,
-      max: field.max ?? 1,
-      step: field.step,
-    }),
+    field.optional
+      ? createOptionalSliderInput({
+          value: typeof value === 'number' ? value : undefined,
+          onChange,
+          min: field.min ?? 0,
+          max: field.max ?? 1,
+          step: field.step,
+          enabledDefault: field.enabledDefault ?? field.min ?? 0,
+        })
+      : createSliderInput({
+          value: (value as number) ?? field.min ?? 0,
+          onChange,
+          min: field.min ?? 0,
+          max: field.max ?? 1,
+          step: field.step,
+        }),
   select: ({ field, value, onChange }) =>
     createSelectInput({
       value: value as string,
@@ -157,7 +167,10 @@ const DEFAULT_DISPLAY_RENDERERS: Record<ConfigField['type'], RenderField> = {
   textarea: ({ value }) =>
     createValueDisplay(asText(value), { multiline: true }),
   number: ({ value }) => createValueDisplay(value == null ? '' : String(value)),
-  slider: ({ value }) => createValueDisplay(value == null ? '' : String(value)),
+  slider: ({ field, value }) =>
+    createValueDisplay(
+      typeof value === 'number' ? String(value) : field.optional ? 'Auto' : '',
+    ),
   select: ({ field, value }) => createValueDisplay(selectLabel(field, value)),
   boolean: ({ value }) => createValueDisplay(value ? 'Yes' : 'No'),
   json: ({ value }) => createJsonValueDisplay(value),

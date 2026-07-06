@@ -297,6 +297,73 @@ export const createSegmentedControl = (
 }
 
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+//  Optional Slider (Auto / Custom)
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+const OPTIONAL_SLIDER_MODE = { AUTO: 'auto', CUSTOM: 'custom' } as const
+
+interface OptionalSliderInputProps {
+  value: number | undefined
+  onChange: (value: number | undefined) => void
+  min: number
+  max: number
+  step?: number
+  enabledDefault: number
+}
+
+export const createOptionalSliderInput = (
+  props: OptionalSliderInputProps,
+): HTMLElement => {
+  const container = document.createElement('div')
+  container.classList.add('wf-control-optional-slider')
+
+  // The slider lives here only in Custom mode; Auto leaves it empty so the
+  // value stays unset.
+  const sliderSlot = document.createElement('div')
+  let current = props.value
+
+  const renderSlider = () => {
+    sliderSlot.replaceChildren()
+    if (typeof current !== 'number') return
+    sliderSlot.appendChild(
+      createSliderInput({
+        value: current,
+        onChange: (value) => {
+          current = value
+          props.onChange(value)
+        },
+        min: props.min,
+        max: props.max,
+        step: props.step,
+      }),
+    )
+  }
+
+  const segmented = createSegmentedControl({
+    options: [
+      { label: 'Auto', value: OPTIONAL_SLIDER_MODE.AUTO },
+      { label: 'Custom', value: OPTIONAL_SLIDER_MODE.CUSTOM },
+    ],
+    value:
+      typeof current === 'number'
+        ? OPTIONAL_SLIDER_MODE.CUSTOM
+        : OPTIONAL_SLIDER_MODE.AUTO,
+    onChange: (mode) => {
+      current =
+        mode === OPTIONAL_SLIDER_MODE.CUSTOM
+          ? (current ?? props.enabledDefault)
+          : undefined
+      renderSlider()
+      props.onChange(current)
+    },
+  })
+
+  renderSlider()
+  container.append(segmented, sliderSlot)
+  return container
+}
+
+// –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 //  JSON (Textarea variant)
 // –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 

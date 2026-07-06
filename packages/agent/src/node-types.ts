@@ -46,6 +46,8 @@ export interface ConfigField {
   min?: number // For 'slider' and 'number'
   max?: number // For 'slider' and 'number'
   step?: number // For 'slider'
+  optional?: boolean // For 'slider' — adds an Auto/Custom toggle; Auto omits it
+  enabledDefault?: number // For an optional 'slider' — the value Custom seeds
   withDefaults?: boolean // For 'fields' — if false, the row hides the default-value editor (Output)
   // For 'fields' — when true, the rows are managed by the preset (via reconcileData)
   // and the user can edit defaults but not add/remove rows or rename them.
@@ -357,7 +359,8 @@ export const BUILTIN_NODE_TYPES: NodeTypeRegistry = {
       temperature: {
         type: 'slider',
         label: 'Temperature',
-        default: 0.7,
+        optional: true,
+        enabledDefault: 1,
         min: 0,
         max: 2,
         step: 0.1,
@@ -373,9 +376,13 @@ export const BUILTIN_NODE_TYPES: NodeTypeRegistry = {
     configPreview: (data): DataPreview => {
       const segments: PreviewSegment[] = [
         { text: String(data.model ?? ''), role: 'value' },
-        ' · temp ',
-        { text: String(data.temperature ?? ''), role: 'value' },
       ]
+      if (typeof data.temperature === 'number') {
+        segments.push(' · temp ', {
+          text: String(data.temperature),
+          role: 'value',
+        })
+      }
       const tools = (data.tools as string[] | undefined) ?? []
       for (const name of tools) {
         segments.push({ text: name, role: 'chip', icon: 'tool' })

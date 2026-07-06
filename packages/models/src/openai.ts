@@ -66,11 +66,23 @@ export const STRUCTURED_OUTPUT = {
 export type StructuredOutputMode =
   (typeof STRUCTURED_OUTPUT)[keyof typeof STRUCTURED_OUTPUT]
 
+const mapTemperatureError = (err: unknown): unknown => {
+  const message = err instanceof Error ? err.message : String(err)
+  if (
+    /temperature/i.test(message) &&
+    /unsupported|not supported|deprecated|does not support/i.test(message)
+  ) {
+    return createError(ERROR_CODE.LLM_TEMPERATURE_UNSUPPORTED)
+  }
+  return err
+}
+
 export const createOpenAIProvider = ({
   client,
   extraBody,
   structuredOutput = STRUCTURED_OUTPUT.JSON_SCHEMA,
   acceptsImageUrls = true,
+  acceptsTemperature = true,
 }: {
   client: OpenAIChatClient
   // Merged into every request body. Use for provider-specific fields the
@@ -82,6 +94,8 @@ export const createOpenAIProvider = ({
   // Set false for base64-only backends (e.g. Ollama); the library then fetches
   // remote image URLs and inlines them as base64 before sending.
   acceptsImageUrls?: boolean
+  // Set false for models that reject a sampling temperature
+  acceptsTemperature?: boolean
 }): LLMProvider => ({
   structuredOutputWithTools: structuredOutput === STRUCTURED_OUTPUT.JSON_SCHEMA,
   acceptsImageUrls,
@@ -113,33 +127,37 @@ export const createOpenAIProvider = ({
           ]
         : messages
 
-    const stream = await create(
-      {
-        ...extraBody,
-        model,
-        [resolveMaxTokensParam(client.baseURL)]: maxTokens,
-        messages: finalMessages.map(toOpenAIMessage),
-        tools:
-          tools.length > 0
-            ? tools.map((t) => ({ type: 'function', function: t }))
-            : undefined,
-        temperature,
-        response_format: outputSchema
-          ? structuredOutput === STRUCTURED_OUTPUT.JSON_SCHEMA
-            ? {
-                type: 'json_schema',
-                json_schema: {
-                  name: 'output',
-                  schema: outputSchema,
-                  strict: true,
-                },
-              }
-            : { type: 'json_object' }
+    const request: Parameters<OpenAIStreamingCreate>[0] = {
+      ...extraBody,
+      model,
+      [resolveMaxTokensParam(client.baseURL)]: maxTokens,
+      messages: finalMessages.map(toOpenAIMessage),
+      tools:
+        tools.length > 0
+          ? tools.map((t) => ({ type: 'function', function: t }))
           : undefined,
-        stream: true,
-      },
-      { signal },
-    )
+      temperature: acceptsTemperature ? temperature : undefined,
+      response_format: outputSchema
+        ? structuredOutput === STRUCTURED_OUTPUT.JSON_SCHEMA
+          ? {
+              type: 'json_schema',
+              json_schema: {
+                name: 'output',
+                schema: outputSchema,
+                strict: true,
+              },
+            }
+          : { type: 'json_object' }
+        : undefined,
+      stream: true,
+    }
+
+    let stream: Awaited<ReturnType<typeof create>>
+    try {
+      stream = await create(request, { signal })
+    } catch (err) {
+      throw mapTemperatureError(err)
+    }
 
     const accumulator = new ToolCallAccumulator()
     let finishReason: string | null | undefined
