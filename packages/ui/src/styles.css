@@ -1021,6 +1021,12 @@
   gap: 10px;
 }
 
+.wf-control-optional-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .wf-control-slider {
   flex: 1;
   appearance: none;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  BUILTIN_NODE_TYPES,
   createTypedNode,
   ERROR_CODE,
   hasDynamicPorts,
@@ -85,5 +86,15 @@ describe('createTypedNode', () => {
     ).toThrowError(
       expect.objectContaining({ code: ERROR_CODE.AGENT_UNKNOWN_NODE_TYPE }),
     )
+  })
+
+  it('leaves an optional slider (temperature) unset by default', () => {
+    const node = createTypedNode({
+      type: 'llm',
+      registry: BUILTIN_NODE_TYPES,
+      portTypes: PORT_TYPES,
+      position: { x: 0, y: 0 },
+    })
+    expect(node.data.temperature).toBeUndefined()
   })
 })
