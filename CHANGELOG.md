@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.2.1] - 2026-07-06
+
+### Changed
+
+- **Dark-mode editor chrome** — refreshed the editor's dark theme and raised the
+  contrast of muted text so secondary labels and hints are easier to read.
+
 ## [0.2.0] - 2026-07-02
 
 ### Changed
@@ -72,7 +79,8 @@ First public release — an embeddable visual workflow editor for the web.
 - Full TypeScript types, zero runtime dependencies, and a tree-shakeable
   umbrella package. MIT licensed.
 
-[Unreleased]: https://github.com/TahaSh/wayflow/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/TahaSh/wayflow/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/TahaSh/wayflow/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/TahaSh/wayflow/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/TahaSh/wayflow/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/TahaSh/wayflow/compare/v0.1.0...v0.1.1
