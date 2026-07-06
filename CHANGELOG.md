@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 Nothing yet.
 
+## [0.3.0] - 2026-07-06
+
+### Changed
+
+- **LLM temperature is now opt-in** — the node's Temperature control defaults to
+  Auto, leaving the value unset so the model uses its own default. This means
+  models that reject a `temperature` parameter work out of the box. Switch to
+  Custom to set a specific value.
+
+### Added
+
+- **`acceptsTemperature` option on `createOpenAIProvider`** — set it `false` to
+  omit `temperature` for a model family that rejects it.
+- A clear, actionable error when a model rejects a temperature you've set,
+  instead of a raw provider 400.
+
 ## [0.2.1] - 2026-07-06
 
 ### Changed
@@ -79,7 +95,8 @@ First public release — an embeddable visual workflow editor for the web.
 - Full TypeScript types, zero runtime dependencies, and a tree-shakeable
   umbrella package. MIT licensed.
 
-[Unreleased]: https://github.com/TahaSh/wayflow/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/TahaSh/wayflow/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/TahaSh/wayflow/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/TahaSh/wayflow/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/TahaSh/wayflow/compare/v0.1.2...v0.2.0
 [0.1.2]: https://github.com/TahaSh/wayflow/compare/v0.1.1...v0.1.2
