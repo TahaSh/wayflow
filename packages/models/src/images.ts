@@ -37,6 +37,16 @@ const toDataUri = async (url: string, signal: AbortSignal): Promise<string> => {
     })
   }
   const mediaType = res.headers.get('content-type') || 'image/png'
-  const data = Buffer.from(await res.arrayBuffer()).toString('base64')
+  const data = arrayBufferToBase64(await res.arrayBuffer())
   return `data:${mediaType};base64,${data}`
+}
+
+// Buffer isn't available in browsers, so this isomorphic image path falls
+// back to btoa there instead of assuming a Node runtime.
+const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
+  if (typeof Buffer !== 'undefined')
+    return Buffer.from(buffer).toString('base64')
+  let binary = ''
+  for (const byte of new Uint8Array(buffer)) binary += String.fromCharCode(byte)
+  return btoa(binary)
 }
