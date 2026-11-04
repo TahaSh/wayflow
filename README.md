@@ -84,6 +84,82 @@ Full docs live at **[wayflow.build](https://wayflow.build)**.
 The [`examples/`](examples/) folder has focused, runnable apps — a quickstart,
 custom nodes, a low-level setup, preview mode, and an editor wired to a backend.
 
+## Develop in a container
+
+The repo ships a [Dev Container](https://containers.dev/): open it and you get
+the whole toolchain, dependencies already installed, and every example one
+command away. Nothing to install locally except Docker and VS Code — or not even
+that, in GitHub Codespaces.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/TahaSh/wayflow)&nbsp;
+[![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=37a0ff&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/TahaSh/wayflow)
+
+Every new terminal greets you with what's installed and the commands you'll use:
+
+```text
+__        __           __ _
+\ \      / /_ _ _   _ / _| | _____      __
+ \ \ /\ / / _` | | | | |_| |/ _ \ \ /\ / /
+  \ V  V / (_| | |_| |  _| | (_) \ V  V /
+   \_/\_/ \__,_|\__, |_| |_|\___/ \_/\_/
+                |___/
+
+ * Node v22 · pnpm 10.17.1: installed
+ * Build:  pnpm build
+ * Test:  pnpm test (watch: pnpm test:watch)
+ * Format + lint:  pnpm check (autofix: pnpm check:write)
+ * Run an example:  pnpm -C examples/quickstart dev → http://localhost:5173
+ * Ollama (for with-backend): reachable
+```
+
+### What's included
+
+| Tool | What it's for | Try it |
+| --- | --- | --- |
+| **Node 22** | The same version CI runs | `node --version` |
+| **pnpm** | Pinned by `packageManager` in `package.json`, via corepack | `pnpm --version` |
+| **tsdown**, **Vitest**, **Biome** | Build, test, and format + lint — the repo's own dev dependencies | `pnpm build && pnpm test && pnpm check` |
+| **GitHub CLI** (`gh`) | Repos, PRs, and issues from the terminal | `gh auth login` |
+| **git**, **zsh**, **figlet** | Version control, a friendly shell, and the welcome banner | open a new terminal |
+
+VS Code installs the **Biome** (set as the formatter, with format on save),
+**Vitest**, and **Claude Code** extensions.
+
+### Run an example
+
+The quickstart starts by itself when the container attaches and opens in your
+browser. To run a different example, stop it (`Ctrl+C` in its terminal) and
+start another; each is a Vite app on the forwarded port `5173`.
+
+| Example | Run | Opens |
+| --- | --- | --- |
+| [quickstart](examples/quickstart) | `pnpm -C examples/quickstart dev` | `:5173` |
+| [custom-nodes](examples/custom-nodes) | `pnpm -C examples/custom-nodes dev` | `:5173` |
+| [low-level](examples/low-level) | `pnpm -C examples/low-level dev` | `:5173` |
+| [preview-mode](examples/preview-mode) | `pnpm -C examples/preview-mode dev` | `:5173` |
+| [with-backend](examples/with-backend) | `pnpm -C examples/with-backend dev` | `:5173`, API on `:3001` |
+
+Edits to the library source hot-reload into a running example.
+
+### Using Ollama with `with-backend`
+
+`with-backend` talks to an OpenAI-compatible model server. In the container it
+reaches the [Ollama](https://ollama.com) on **your machine** through
+`OLLAMA_BASE_URL` (`http://host.docker.internal:11434/v1`), so models you've
+pulled on the host just work — the banner shows whether Ollama is reachable. In
+Codespaces there's no host Ollama; point `server/runtime.ts` at a hosted
+provider instead (see the example's README).
+
+### Good to know
+
+- **Clone in Volume is fastest.** The Dev Containers badge clones into a Docker
+  volume, which is much quicker than a bind-mounted folder on macOS and Windows.
+- **Reopening a local checkout is safe.** `node_modules` and
+  `examples/node_modules` live in container volumes, so the container's Linux
+  binaries never replace your host's.
+- **Changed dependencies?** Run `pnpm install && pnpm -C examples install`, or
+  rebuild the container for a clean slate.
+
 ## Contributing
 
 Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).

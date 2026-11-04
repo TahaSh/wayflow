@@ -1,0 +1,56 @@
+{
+  "name": "Wayflow",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "remoteUser": "node",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "runArgs": ["--add-host=host.docker.internal:host-gateway"],
+  "containerEnv": {
+    "WAYFLOW_ROOT": "${containerWorkspaceFolder}",
+    "OLLAMA_BASE_URL": "http://host.docker.internal:11434/v1",
+    "npm_config_store_dir": "/home/node/.local/share/pnpm/store",
+    "NODE_OPTIONS": "--dns-result-order=ipv4first"
+  },
+  "mounts": [
+    "source=wayflow-node_modules-${devcontainerId},target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=wayflow-examples-node_modules-${devcontainerId},target=${containerWorkspaceFolder}/examples/node_modules,type=volume"
+  ],
+  "postCreateCommand": {
+    "install": "sudo chown node node_modules examples/node_modules && pnpm install && pnpm -C examples install"
+  },
+  "postStartCommand": {
+    "set-git-config-safe-directory": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+  },
+  "postAttachCommand": {
+    "welcome": "bash /etc/update-motd.d/00-header --first-run",
+    "quickstart": "pnpm -C examples/quickstart dev"
+  },
+  "forwardPorts": [5173, 3001],
+  "portsAttributes": {
+    "5173": {
+      "label": "Wayflow editor (example)",
+      "onAutoForward": "openBrowser"
+    },
+    "3001": {
+      "label": "with-backend API",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "biomejs.biome",
+        "vitest.explorer",
+        "anthropic.claude-code"
+      ],
+      "settings": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true,
+        "debug.javascript.autoAttachFilter": "disabled"
+      }
+    }
+  }
+}

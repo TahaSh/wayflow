@@ -23,7 +23,7 @@ const MODEL = 'qwen3.5:9b'
 const IMAGE_MODEL = 'x/flux2-klein:latest'
 
 const client = new OpenAI({
-  baseURL: 'http://localhost:11434/v1',
+  baseURL: process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434/v1',
   apiKey: 'ollama',
 })
 

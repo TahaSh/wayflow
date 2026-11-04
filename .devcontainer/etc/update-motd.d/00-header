@@ -1,0 +1,54 @@
+#!/bin/bash
+# Wayflow blue, matches the README badges
+WAYFLOW_BLUE='\e[38;2;55;160;255m'
+LABEL='\e[1;93m'
+VALUE='\e[38;5;198m'
+NOTE='\e[0;36m'
+RESET='\e[0m'
+
+ROOT="${WAYFLOW_ROOT:-$PWD}"
+
+printf '%b' "${WAYFLOW_BLUE}"
+/usr/bin/figlet -f standard -w 170 "Wayflow"
+printf '%b' "${RESET}"
+
+if [[ $CODESPACES == true ]]; then
+  EDITOR_URL="https://${CODESPACE_NAME}-5173.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}"
+else
+  EDITOR_URL="http://localhost:5173"
+fi
+
+if [[ -d $ROOT/node_modules/.pnpm && -d $ROOT/examples/node_modules/.pnpm ]]; then
+  DEPS_STATUS='\e[32minstalled'
+else
+  DEPS_STATUS="\e[31mnot installed ${NOTE}(run: pnpm install && pnpm -C examples install)"
+fi
+
+if [[ $CODESPACES == true ]]; then
+  OLLAMA_STATUS="${NOTE}not available in Codespaces (use a hosted provider)"
+elif curl -fsS -m 1 -o /dev/null "${OLLAMA_BASE_URL}/models" 2>/dev/null; then
+  OLLAMA_STATUS="\e[32mreachable ${NOTE}(${OLLAMA_BASE_URL})"
+else
+  OLLAMA_STATUS="\e[31mnot reachable ${NOTE}(start it on your machine: ollama serve)"
+fi
+
+printf "\n"
+printf '%b' "${NOTE}Welcome! You are running in the Wayflow Dev Container.\n"
+printf '%b' "${NOTE}Have a look at .devcontainer/ to get deeper insight into your environment.\n"
+printf "\n"
+printf '%b' "${LABEL}Documentation: ${VALUE} https://wayflow.build\n"
+printf "\n"
+printf '%b' "${LABEL} * Node $(node --version) · pnpm $(pnpm --version 2>/dev/null): ${DEPS_STATUS}\n"
+printf '%b' "${LABEL} * Build: ${VALUE} pnpm build\n"
+printf '%b' "${LABEL} * Test: ${VALUE} pnpm test ${NOTE}(watch: pnpm test:watch)\n"
+printf '%b' "${LABEL} * Format + lint: ${VALUE} pnpm check ${NOTE}(autofix: pnpm check:write)\n"
+printf '%b' "${LABEL} * Run an example: ${VALUE} pnpm -C examples/quickstart dev ${NOTE}→ ${EDITOR_URL}\n"
+printf '%b' "${NOTE}     also: custom-nodes · low-level · preview-mode · with-backend (API on :3001)\n"
+printf '%b' "${LABEL} * Ollama (for with-backend): ${OLLAMA_STATUS}\n"
+printf '%b' "${LABEL} * Login to GitHub: ${VALUE} gh auth login\n"
+printf '%b\n' "${RESET}"
+
+if [[ $1 == --first-run ]]; then
+  printf '\e[1;92m%s\e[0m\n' "👉 Your Wayflow environment is ready! Open a new terminal to get started:"
+  printf '\e[1;92m%s\e[0m\n\n' "   Terminal → New Terminal, or press Ctrl+Shift+\` (Cmd+Shift+\` on a Mac)"
+fi
